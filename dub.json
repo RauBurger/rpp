@@ -1,0 +1,17 @@
+{
+	"name": "rpp",
+	"targetType": "library",
+	"sourcePaths": ["rpp"],
+	"copyright": "Copyright © 2016, Robert F. Rau II",
+	"authors": ["Rob Rau"],
+	"dependancies": {
+		"rpp:example_0": "*",
+		"rpp:example_1": "*",
+		"rpp:example_2": "*"
+	},
+	"subPackages": [
+		"./examples/example_0",
+		"./examples/example_1",
+		"./examples/example_2"
+	]
+}

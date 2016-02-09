@@ -1,4 +1,4 @@
-module example_0;
+module example_2;
 
 import std.stdio;
 import std.math;
@@ -7,10 +7,10 @@ import rpp.rpc;
 
 int main(char[][] args)
 {
-	initRPP("127.0.0.1", "127.0.0.1", 54000, 55000);
+	initRPP("192.168.2.129", "192.168.2.43", 54000, 55000);
 	real start = 0;
 	real end = 20;
-	int points = 3000;
+	int points = 1000;
 
 	real h = (end-start)/(points-1);
 	real[] x = new real[points];

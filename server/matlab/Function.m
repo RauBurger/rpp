@@ -1,8 +1,8 @@
-classdef Function
+classdef Function < uint8
 	enumeration
 		None(-1), Plot(0), Figure(1), SetupPlot(2), Print(3), Xlabel(4), Ylabel(5), Title(6), Subplot(7), Legend(8), Hold(9), Axes(10), Grid(11)
 	end
-	
+	%{
 	properties
 		func = -1;
 	end
@@ -72,4 +72,5 @@ classdef Function
 			end
 		end
 	end
+	%}
 end

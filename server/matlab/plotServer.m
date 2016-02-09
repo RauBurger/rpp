@@ -13,7 +13,7 @@ function plotServer(address, remotePort, localPort)
 		fopen(u);
 		fprintf('Server open\n');
 		
-		currentFunction = Function.makeFunction(-1);
+		currentFunction = Function.None;%Function.makeFunction(-1);
 		currentPayload = 10;
 		while(1)
 			
@@ -40,11 +40,11 @@ function plotServer(address, remotePort, localPort)
 			fwrite(u, payload, 'uint8');
 			
 
-			currentCommand = Command.makeCommand(data(1));
+			currentCommand = data(1); %Command.makeCommand(data(1));
 			
 			switch currentCommand
 				case Command.Function
-					currentFunction = Function.makeFunction(data(2));
+					currentFunction = data(2); %Function.makeFunction(data(2));
 					currentPayload = double(typecast(uint8(data(3:end)), 'uint64'));
 				case Command.Data
 					switch currentFunction

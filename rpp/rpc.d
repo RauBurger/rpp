@@ -70,18 +70,20 @@ class rpc
 
 	private enum Function : byte
 	{
-		Plot = 0,
-		Figure,
-		SetupPlot,
-		Print,
-		Xlabel,
-		Ylabel,
-		Title,
-		Subplot,
-		Legend,
-		Hold,
-		Axes,
-		Grid
+		Plot = 0,	// done
+		Figure,		// done
+		SetupPlot,	// done
+		Print,		// done
+		Xlabel,		// done
+		Ylabel,		// done
+		Title,		// done
+		Subplot,	//
+		Legend,		// done
+		Hold,		// done
+		Axes,		//
+		Grid,		// done
+		Contour,	//
+		Colorbar	//
 	}
 
 	private static Socket server;
@@ -471,6 +473,7 @@ class rpc
 		if(data.length < maxSendBytes)
 		{
 			ptrdiff_t sentBytes = server.sendTo(data, serverAddr);
+			writeln("sentBytes = ", sentBytes);
 
 			ubyte[5] respData;
 			ptrdiff_t rcvBytes = server.receiveFrom(respData, serverAddr);

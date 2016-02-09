@@ -1,8 +1,8 @@
-classdef Command
+classdef Command < uint8
 	enumeration
 		Idle(-1), Function(0), Data(1), Done(2)
 	end
-	
+	%{
 	properties
 		command = -1;
 	end
@@ -36,5 +36,5 @@ classdef Command
 			end
 		end
 	end
-	
+	%}
 end

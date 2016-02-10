@@ -70,6 +70,7 @@ function plotServer(address, remotePort, localPort)
 							textLabel(currentFunction, data');
 
 						case Function.Subplot
+							Subplot(data);
 							
 						case Function.Legend
 							Legend(data');

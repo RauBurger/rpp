@@ -143,16 +143,41 @@ end
 
 function [str, offset] = getStr(lengthType, data, offset)
 	if(strcmp(lengthType, 'uint16'))
+		%{
 		length = typecast(uint8(data(offset:offset+1)), lengthType);
 		offset = offset + 2;
-		str = char(data(offset:offset+length-1));
+		if(length == 0)
+			str = '';
+		else
+			str = char(data(offset:offset+length-1));
+		end
 		offset = offset + length;
+		%}
+		lengthSize = 2;
 	elseif(strcmp(lengthType, 'uint32'))
+		lengthSize = 4;
+		%{
 		length = typecast(uint8(data(offset:offset+3)), lengthType);
 		offset = offset + 4;
-		str = char(data(offset:offset+length-1));
+		if(length == 0)
+			str = '';
+		else
+			str = char(data(offset:offset+length-1));
+		end
+		%str = char(data(offset:offset+length-1));
 		offset = offset + length;
+		%}
 	end
+
+	length = typecast(uint8(data(offset:offset+lengthSize-1)), lengthType);
+	offset = offset + lengthSize;
+	if(length == 0)
+		str = '';
+	else
+		str = char(data(offset:offset+length-1));
+	end
+	%str = char(data(offset:offset+length-1));
+	offset = offset + length;
 end
 
 function [num, offset] = getNum(numType, data, offset)
@@ -256,34 +281,57 @@ function SetupPlot(data, hlines)
 	
 	xlabLenOffset = 2;
 	xlabOffset = 6;
+	%{
 	xlabelLen = typecast(uint8(data(xlabLenOffset:5)), 'uint32');
 	xlab = char(data(xlabOffset:xlabOffset+xlabelLen-1));
-	
+	%}
+	offset = 2;
+	[xlab, offset] = getStr('uint32', data, offset);
+
+	%{
 	ylabLenOffset = xlabOffset+xlabelLen;
 	ylabOffset = ylabLenOffset+4;
 	ylabelLen = typecast(uint8(data(ylabLenOffset:ylabLenOffset+3)), 'uint32');
 	ylab = char(data(ylabOffset:ylabOffset+ylabelLen-1));
-	
-	numLines = data(ylabOffset+ylabelLen);
-	
+	%}
+	[ylab, offset] = getStr('uint32', data, offset);
+
+	%numLines = data(ylabOffset+ylabelLen);
+	numLines = data(offset);
+	offset = offset + 1;
+
+	%{
 	nameLenOffset = ylabOffset+ylabelLen+1;
 	nameOffset = nameLenOffset+4;
+	%}
 	legendNames = {};
 	
 	for i=1:numLines
+		%{
 		nameLen = typecast(uint8(data(nameLenOffset:nameLenOffset+3)), 'uint32');
 		legendNames{i} = char(data(nameOffset:nameOffset+nameLen-1));
 		nameLenOffset = nameLenOffset + nameLen +4;
 		nameOffset = nameLenOffset+4;
+		%}
+		[legendNames{i}, offset] = getStr('uint32', data, offset);
 	end
 	
-	fontSize = data(nameLenOffset);
-	
+	%fontSize = data(nameLenOffset);
+	fontSize = data(offset);
+	offset = offset + 1;
+
+	%{
 	legendLocLenOffset = nameLenOffset+1;
 	legendLocOffset = legendLocLenOffset+4;
 	legendLocLen = typecast(uint8(data(legendLocLenOffset:legendLocLenOffset+3)), 'uint32');
-	legendLoc = char(data(legendLocOffset:legendLocOffset+legendLocLen-1));
-	
+	if(legendLocLen == 0)
+		legendLoc = '';
+	else
+		legendLoc = char(data(legendLocOffset:legendLocOffset+legendLocLen-1));
+	end
+	%}
+	[legendLoc, offset] = getStr('uint32', data, offset);
+
 	setupPlot(hlines, xlab, ylab, legendNames, fontSize, legendLoc);
 end
 

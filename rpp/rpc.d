@@ -473,7 +473,6 @@ class rpc
 		if(data.length < maxSendBytes)
 		{
 			ptrdiff_t sentBytes = server.sendTo(data, serverAddr);
-			writeln("sentBytes = ", sentBytes);
 
 			ubyte[5] respData;
 			ptrdiff_t rcvBytes = server.receiveFrom(respData, serverAddr);

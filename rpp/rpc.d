@@ -83,7 +83,10 @@ class rpc
 		Axes,		//
 		Grid,		// done
 		Contour,	//
-		Colorbar	//
+		Colorbar,	//
+		Semilogx,	//
+		Semilogy,	//
+		Loglog		//
 	}
 
 	private static Socket server;
@@ -429,9 +432,22 @@ class rpc
 		textLabelImpl!(Function.Title)(title, args);
 	}
 
-	static void subplot(int i, int j, int k)
+	static void subplot(string opt = "", options...)(ubyte m, ubyte n, ubyte p, options args)
 	{
+		ubyte[] subplotData;
+		subplotData ~= Command.Data;
 
+		subplotData ~= m;
+		subplotData ~= n;
+		subplotData ~= p;
+
+		subplotData ~= toUBytes!ubyte(opt);
+
+		subplotData ~= optionsToUbytes(args);
+
+		SendFunctionCommand!(Function.Subplot)(subplotData.length);
+		SendData(subplotData);
+		SendDoneCommand();
 	}
 
 	static void legend(options...)(string[] lines, options args)

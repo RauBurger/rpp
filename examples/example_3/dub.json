@@ -1,0 +1,8 @@
+{
+	"name": "example_3",
+	"targetType": "executable",
+	"importPaths": ["../../"],
+	"dependencies": {
+		"rpp": {"path": "../../"}
+	}
+}

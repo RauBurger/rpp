@@ -93,17 +93,21 @@ class rpc
 	private static Socket server;
 	private static Address serverAddr;
 	private static Address serverRcv;
-	private static const uint maxSendBytes = 64000;
+	//private static const uint maxSendBytes = 64000;
+	private static const uint maxSendBytes = 9216;
 
 	static void initRPP(string remoteAddr, string localAddr, ushort remotePort, ushort localPort)
 	{
 		writeln("trying to connect to server");
-		server = new UdpSocket(AddressFamily.INET);
+		//server = new UdpSocket(AddressFamily.INET);
+		server = new TcpSocket(AddressFamily.INET);
 		server.blocking = true;
 		writeln("connected to server... I think");
 		serverAddr = new InternetAddress(to!(const(char[]))(remoteAddr), remotePort);
 		serverRcv = new InternetAddress(to!(const(char[]))(localAddr), localPort);
 		server.bind(serverRcv);
+		server.connect(serverAddr);
+		//server.bind(serverRcv);
 	}
 
 	private static void SendFunctionCommand(Function func)(ulong dataLength)

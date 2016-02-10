@@ -21,7 +21,7 @@ alias title = rpc.title;
 alias subplot = rpc.subplot;
 alias legend = rpc.legend;
 alias hold = rpc.hold;
-alias axes = rpc.axes;
+alias axis = rpc.axis;
 alias setupPlot = rpc.setupPlot;
 alias grid = rpc.grid;
 
@@ -81,7 +81,7 @@ class rpc
 		Subplot,	// done - testing
 		Legend,		// done
 		Hold,		// done
-		Axes,		//
+		Axis,		// done
 		Grid,		// done
 		Contour,	//
 		Colorbar,	//
@@ -469,7 +469,7 @@ class rpc
 		SendDoneCommand();
 	}
 
-	static void axes(T)(T arg) if(is(T : string) || (isArray!T && isIntegral!(typeof(arg[0]))))
+	static void axis(T)(T arg) if(is(T : string) || (isArray!T && isIntegral!(typeof(arg[0]))))
 	{
 		alias options = AliasSeq!arg;
 		ubyte[] axesData;
@@ -494,7 +494,7 @@ class rpc
 			axesData ~= toUBytes!long(arg[3]);
 		}
 
-		SendFunctionCommand!(Function.Axes)(axesData.length);
+		SendFunctionCommand!(Function.Axis)(axesData.length);
 		SendData(axesData);
 		SendDoneCommand();
 	}

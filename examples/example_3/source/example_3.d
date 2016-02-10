@@ -32,12 +32,12 @@ int main(char[][] args)
 	figure();
 	subplot(1, 2, 1); plot(x, u);
 	setupPlot("$x$", "$u$", ["line"], 12, "");
-	axes([-12, 12, -1, 1]);
+	axis([-12, 12, -1, 1]);
 	title("Some lines!");
 
 	subplot(1, 2, 2); plot(x, u1);
 	setupPlot("$x$", "$u$", ["line"], 12, "");
-	axes("square");
+	axis("square");
 	title("Some lines!");
 
 	return 0;

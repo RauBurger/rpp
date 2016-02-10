@@ -21,6 +21,7 @@ alias title = rpc.title;
 alias subplot = rpc.subplot;
 alias legend = rpc.legend;
 alias hold = rpc.hold;
+alias axes = rpc.axes;
 alias setupPlot = rpc.setupPlot;
 alias grid = rpc.grid;
 
@@ -77,7 +78,7 @@ class rpc
 		Xlabel,		// done
 		Ylabel,		// done
 		Title,		// done
-		Subplot,	//
+		Subplot,	// done - testing
 		Legend,		// done
 		Hold,		// done
 		Axes,		//
@@ -465,6 +466,36 @@ class rpc
 
 		SendFunctionCommand!(Function.Legend)(legendData.length);
 		SendData(legendData);
+		SendDoneCommand();
+	}
+
+	static void axes(T)(T arg) if(is(T : string) || (isArray!T && isIntegral!(typeof(arg[0]))))
+	{
+		alias options = AliasSeq!arg;
+		ubyte[] axesData;
+
+		axesData ~= Command.Data;
+
+		static if(is(T : string))
+		{
+			axesData ~= 0;
+
+			axesData ~= toUBytes!ubyte(arg);
+		}
+		else
+		{
+			assert(arg.length == 4, "Array must be 4 elements long for axes command");
+			
+			axesData ~= 1;
+
+			axesData ~= toUBytes!long(arg[0]);
+			axesData ~= toUBytes!long(arg[1]);
+			axesData ~= toUBytes!long(arg[2]);
+			axesData ~= toUBytes!long(arg[3]);
+		}
+
+		SendFunctionCommand!(Function.Axes)(axesData.length);
+		SendData(axesData);
 		SendDoneCommand();
 	}
 

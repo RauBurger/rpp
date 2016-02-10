@@ -85,6 +85,7 @@ function plotServer(address, remotePort, localPort)
 							end
 							
 						case Function.Axes
+							Axes(data);
 							
 						case Function.Grid
 							if(data(2) == 1)
@@ -305,6 +306,28 @@ function Subplot(data)
 
 	fn = str2func(fnStr);
 
+	fn();
+
+end
+
+function Axes(data)
+
+	fnStr = '@()axes';
+
+	offset = 3;
+	if(data(2) == 0)
+		[str, offset] = getStr('uint8', data, offset);
+		fnStr = [fnStr, ' ', str. ';'];
+	elseif(data(2) == 1)
+		[xmin, offset] = getNum('int64', data, offset);
+		[xmax, offset] = getNum('int64', data, offset);
+		[ymin, offset] = getNum('int64', data, offset);
+		[ymax, offset] = getNum('int64', data, offset);
+
+		fnStr = [fnStr, '(', num2str(xmin), ',', num2str(xmax), ',', num2str(ymin), ',', num2str(ymax), ');']
+	end
+
+	fn = str2func(fnStr);
 	fn();
 
 end

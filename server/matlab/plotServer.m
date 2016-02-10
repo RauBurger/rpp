@@ -13,7 +13,7 @@ function plotServer(address, remotePort, localPort)
 		fopen(u);
 		fprintf('Server open\n');
 		
-		currentFunction = Function.None;%Function.makeFunction(-1);
+		currentFunction = Function.None;
 		currentPayload = 10;
 		while(1)
 			
@@ -38,13 +38,12 @@ function plotServer(address, remotePort, localPort)
 			
 			payload = [uint8(0), typecast(uint32(bytesRead), 'uint8')];
 			fwrite(u, payload, 'uint8');
-			
 
-			currentCommand = data(1); %Command.makeCommand(data(1));
-			
+			currentCommand = data(1);
+
 			switch currentCommand
 				case Command.Function
-					currentFunction = data(2); %Function.makeFunction(data(2));
+					currentFunction = data(2);
 					currentPayload = double(typecast(uint8(data(3:end)), 'uint64'));
 				case Command.Data
 					switch currentFunction
@@ -84,8 +83,9 @@ function plotServer(address, remotePort, localPort)
 								holdOn = false;
 							end
 							
-						case Function.Axes
-							Axes(data);
+						case Function.Axis
+							
+							Axis(data);
 							
 						case Function.Grid
 							if(data(2) == 1)
@@ -163,14 +163,14 @@ function [str, offset] = getStr(lengthType, data, offset)
 end
 
 function [num, offset] = getNum(numType, data, offset)
-	if(strcmp(lengthType, 'uint16'))
-		num = typecast(uint8(data(offset:offset+1)), lengthType);
+	if(strcmp(numType, 'uint16') || strcmp(numType, 'int16'))
+		num = typecast(uint8(data(offset:offset+1)), numType);
 		offset = offset + 2;
-	elseif(strcmp(lengthType, 'uint32') || strcmp(lengthType, 'int32') || strcmp(lengthType, 'single'))
-		num = typecast(uint8(data(offset:offset+3)), lengthType);
+	elseif(strcmp(numType, 'uint32') || strcmp(numType, 'int32') || strcmp(numType, 'single'))
+		num = typecast(uint8(data(offset:offset+3)), numType);
 		offset = offset + 4;
-	elseif(strcmp(lengthType, 'uint64') || strcmp(lengthType, 'int64') || strcmp(lengthType, 'double'))
-		num = typeast(uint8(data(offset:offset+7)), lengthType);
+	elseif(strcmp(numType, 'uint64') || strcmp(numType, 'int64') || strcmp(numType, 'double'))
+		num = typecast(uint8(data(offset:offset+7)), numType);
 		offset = offset + 8;
 	end
 end
@@ -305,30 +305,21 @@ function Subplot(data)
 	fnStr = [fnStr, ');'];
 
 	fn = str2func(fnStr);
-
 	fn();
-
 end
 
-function Axes(data)
-
-	fnStr = '@()axes';
-
+function Axis(data)
 	offset = 3;
 	if(data(2) == 0)
-		[str, offset] = getStr('uint8', data, offset);
-		fnStr = [fnStr, ' ', str. ';'];
+		[str, offset] = getStr('uint8', data', offset);
+		axis(str);
 	elseif(data(2) == 1)
 		[xmin, offset] = getNum('int64', data, offset);
 		[xmax, offset] = getNum('int64', data, offset);
 		[ymin, offset] = getNum('int64', data, offset);
 		[ymax, offset] = getNum('int64', data, offset);
-
-		fnStr = [fnStr, '(', num2str(xmin), ',', num2str(xmax), ',', num2str(ymin), ',', num2str(ymax), ');']
+		axis([xmin, xmax, ymin, ymax]);
 	end
-
-	fn = str2func(fnStr);
-	fn();
 
 end
 
@@ -339,18 +330,21 @@ function hlines = Plot(data, holdOn)
 	
 	dataPtr = 4;
 	
+	x = zeros(2, 1);
+	y = zeros(2, 1);
+
 	for i=0:numLines-1
 		
 		length = typecast(uint8(data(dataPtr:dataPtr+3)), 'uint32');
 		dataPtr = dataPtr + 4;
-		x = zeros(length/8, 1);
-		y = zeros(length/8, 1);
+		x = zeros(length/8, numLines);
+		y = zeros(length/8, numLines);
 		for j=0:length/8-1
-			x(j+1) = typecast(uint8(data(dataPtr:dataPtr+7)), 'double');
+			x(j+1, i+1) = typecast(uint8(data(dataPtr:dataPtr+7)), 'double');
 			dataPtr = dataPtr + 8;
 		end
 		for j=0:length/8-1
-			y(j+1) = typecast(uint8(data(dataPtr:dataPtr+7)), 'double');
+			y(j+1, i+1) = typecast(uint8(data(dataPtr:dataPtr+7)), 'double');
 			dataPtr = dataPtr + 8;
 		end
 		if(dataFormat == 1)
@@ -371,6 +365,7 @@ function hlines = Plot(data, holdOn)
 			drawnow;
 		end
 	end
+
 	if (holdOn == false)
 		hold off;
 	elseif (holdOn == true)

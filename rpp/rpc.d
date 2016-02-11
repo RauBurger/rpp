@@ -24,6 +24,9 @@ alias hold = rpc.hold;
 alias axis = rpc.axis;
 alias setupPlot = rpc.setupPlot;
 alias grid = rpc.grid;
+alias semilogx = rpc.semilogx;
+alias semilogy = rpc.semilogy;
+alias loglog = rpc.loglog;
 
 class PlotException : Exception
 {
@@ -66,7 +69,8 @@ class rpc
 	{
 		Function = 0,
 		Data,
-		Done
+		Done,
+		Close
 	}
 
 	private enum Function : byte
@@ -85,29 +89,49 @@ class rpc
 		Grid,		// done
 		Contour,	//
 		Colorbar,	//
-		Semilogx,	//
-		Semilogy,	//
-		Loglog		//
+		Semilogx,	// done
+		Semilogy,	// done
+		Loglog		// done
 	}
 
 	private static Socket server;
 	private static Address serverAddr;
 	private static Address serverRcv;
-	//private static const uint maxSendBytes = 64000;
-	private static const uint maxSendBytes = 9216;
 
 	static void initRPP(string remoteAddr, string localAddr, ushort remotePort, ushort localPort)
 	{
 		writeln("trying to connect to server");
-		//server = new UdpSocket(AddressFamily.INET);
+		
 		server = new TcpSocket(AddressFamily.INET);
 		server.blocking = true;
+		server.setOption(SocketOptionLevel.TCP, SocketOption.TCP_NODELAY, 1);
+		
 		writeln("connected to server... I think");
 		serverAddr = new InternetAddress(to!(const(char[]))(remoteAddr), remotePort);
 		serverRcv = new InternetAddress(to!(const(char[]))(localAddr), localPort);
 		server.bind(serverRcv);
 		server.connect(serverAddr);
-		//server.bind(serverRcv);
+		
+		ubyte[5] respData;
+		long rcvBytes = server.receiveFrom(respData, serverAddr);
+		if(respData[0] == 3)
+			ThrowPlotException(respData);
+
+	}
+
+	private static ~this()
+	{
+		writeln("closing socket");
+
+		server.send([Command.Close, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+		
+		ubyte[5] respData;
+		long rcvBytes = server.receiveFrom(respData, serverAddr);
+		if(respData[0] == 3)
+			ThrowPlotException(respData);
+
+		writeln(respData);
+		server.close();
 	}
 
 	private static void SendFunctionCommand(Function func)(ulong dataLength)
@@ -119,6 +143,7 @@ class rpc
 		funcCommand[2..$] = toUBytes!long(dataLength);
 
 		long sentBytes = server.sendTo(funcCommand, serverAddr);
+
 		ubyte[5] respData;
 		long rcvBytes = server.receiveFrom(respData, serverAddr);
 		if(respData[0] == 3)
@@ -191,7 +216,28 @@ class rpc
 	 * [2*n] = length
 	 * [2*n+1] = format string idx 0
 	 */
+
 	static void plot(Line...)(Line args)
+	{
+		plotImpl!(Function.Plot)(args);
+	}
+
+	static void semilogx(Line...)(Line args)
+	{
+		plotImpl!(Function.Semilogx)(args);
+	}
+
+	static void semilogy(Line...)(Line args)
+	{
+		plotImpl!(Function.Semilogy)(args);
+	}
+
+	static void loglog(Line...)(Line args)
+	{
+		plotImpl!(Function.Loglog)(args);
+	}
+
+	private static void plotImpl(Function func, Line...)(Line args)
 	{
 		alias lines = AliasSeq!(args);
 		static assert(lines.length >= 2, "Not enough input arguments");
@@ -250,7 +296,7 @@ class rpc
 			}
 		}
 
-		SendFunctionCommand!(Function.Plot)(plotData.length);
+		SendFunctionCommand!(func)(plotData.length);
 		SendData(plotData);
 		SendDoneCommand();
 	}
@@ -521,68 +567,11 @@ class rpc
 
 	private static void SendData(ubyte[] data)
 	{
-		if(data.length < maxSendBytes)
-		{
-			ptrdiff_t sentBytes = server.sendTo(data, serverAddr);
+		ptrdiff_t sentBytes = server.sendTo(data, serverAddr);
 
-			ubyte[5] respData;
-			ptrdiff_t rcvBytes = server.receiveFrom(respData, serverAddr);
-			uint bytesReceived = get!uint(respData[1..$]);
-			
-			// server did not get all the bytes, so we need to send more
-			if(respData[0] == 1)
-			{
-				while(bytesReceived < data.length)
-				{
-					sentBytes = server.sendTo(data[bytesReceived..$], serverAddr);
-					if(sentBytes < 0)
-						writeln("error text: ", lastSocketError());
-					rcvBytes = server.receiveFrom(respData, serverAddr);
-					if(respData[0] == 3)
-						ThrowPlotException(respData);
-					
-					bytesReceived = get!uint(respData[1..$]);
-				}
-			}
-			else if(respData[0] == 3)
-				ThrowPlotException(respData);
-		}
-		else
-		{
-			int chunks = cast(int)ceil(cast(real)data.length/maxSendBytes);
-			auto bytesLeft = data.length;
-			for(int i = 0; i < chunks; i++)
-			{
-				ubyte[maxSendBytes] sendBuff;
-				sendBuff[0..(bytesLeft < maxSendBytes ? bytesLeft : $)] = data[i*maxSendBytes..(bytesLeft < maxSendBytes ? $ : maxSendBytes*(i+1))];
-
-				ptrdiff_t sentBytes = server.sendTo(sendBuff[0..(bytesLeft < maxSendBytes ? bytesLeft : $)], serverAddr);
-
-				ubyte[5] respData;
-				ptrdiff_t rcvBytes = server.receiveFrom(respData, serverAddr);
-				uint bytesReceived = get!uint(respData[1..$]);
-
-				if(respData[0] == 1)
-				{
-					while((bytesReceived - i*maxSendBytes) < maxSendBytes)
-					{
-						sentBytes = server.sendTo(sendBuff[bytesReceived - i*maxSendBytes..(bytesLeft < maxSendBytes ? bytesLeft : $)], serverAddr);
-						if(sentBytes < 0)
-							writeln("error text: ", lastSocketError());
-						rcvBytes = server.receiveFrom(respData, serverAddr);
-						if(respData[0] == 3)
-							ThrowPlotException(respData);
-
-						bytesReceived = get!uint(respData[1..$]);
-					}
-				}
-				else if(respData[0] == 3)
-				{
-					ThrowPlotException(respData);
-				}
-				bytesLeft -= maxSendBytes;
-			}
-		}
+		ubyte[5] respData;
+		ptrdiff_t rcvBytes = server.receiveFrom(respData, serverAddr);
+		uint bytesReceived = get!uint(respData[1..$]);
 	}
 
 	private static void SendDoneCommand()

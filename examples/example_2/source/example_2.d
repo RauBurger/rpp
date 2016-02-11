@@ -7,7 +7,7 @@ import rpp.rpc;
 
 int main(char[][] args)
 {
-	initRPP("192.168.2.129", "192.168.2.43", 54000, 55000);
+	initRPP("127.0.0.1", "127.0.0.1", 54000, 55000);
 	real start = 0;
 	real end = 20;
 	int points = 1000;
@@ -30,7 +30,7 @@ int main(char[][] args)
 
 	figure();
 	plot(x, u, "r", x, u1, "b");
-	setupPlot("$x$", "$u$", ["$u$", "$u_1$"], 12, "");
+	setupPlot("$x$", "$u$", ["$u$", "$u_1$"], 12, "northwest");
 	title("Some lines!");
 
 	return 0;

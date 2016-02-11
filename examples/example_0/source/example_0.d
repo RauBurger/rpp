@@ -11,7 +11,7 @@ int main(char[][] args)
 
 	real start = 0;
 	real end = 20;
-	int points = 100;
+	int points = 300;
 
 	real h = (end-start)/(points-1);
 	real[] x = new real[points];

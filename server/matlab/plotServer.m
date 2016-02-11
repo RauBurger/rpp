@@ -1,8 +1,10 @@
 function plotServer(address, remotePort, localPort)
 
-	u = udp(address, remotePort, 'LocalPort', localPort, 'Timeout', .005);
+	%u = udp(address, remotePort, 'LocalPort', localPort, 'Timeout', .005);
+	u = tcpip('0.0.0.0', 54000, 'NetworkRole', 'server', 'Timeout', 0.005);
 	
 	c = onCleanup(@()cleanUp(u));
+	%t = timer('TimerFcn',@(x,y)timerCallback(x, y, u),'StartDelay',0, 'TasksToExecute', 1, 'ExecutionMode', 'fixedRate', 'Period', 0.1); % 
 	
 	try
 		holdOn = false;		
@@ -10,105 +12,134 @@ function plotServer(address, remotePort, localPort)
 		%u.InputBufferSize = 512;
 		u.InputBufferSize = 9216;
 		
-		fopen(u);
-		fprintf('Server open\n');
-		
-		currentFunction = Function.None;
-		currentPayload = 10;
 		while(1)
-			
-			bytesRead = 0;
-			data = 255*ones(currentPayload, 1);
-			
-			warning('off', 'instrument:fread:unsuccessfulRead');
-			data = fread(u, currentPayload-bytesRead, 'uint8');
-			bytesRead = bytesRead + max(size(data));
-			
-			while(bytesRead < currentPayload)
-				%fprintf('bytesRead = %d\n', bytesRead);
+			%start(t);
+			fopen(u);
+			%while(strcmp(u.Status, 'closed'))
+			%	fprintf('no connection\n');
+			%	drawnow;
+			%end
+			fprintf('Server open\n');
+			connected = true;
+
+			fwrite(u, uint8([0, 255, 255, 255, 255]));
+			currentFunction = Function.None;
+			currentPayload = 10;
+			while(connected == true)
+
+				bytesRead = 0;
+
+				warning('off', 'instrument:fread:unsuccessfulRead');
+
+				waitForBytes(u);
+				data = fread(u, u.BytesAvailable, 'uint8');
+				
+				bytesRead = bytesRead + max(size(data));
+
+				while(bytesRead < currentPayload)
+					%fprintf('1 currentPayload = %d\tbytesRead = %d\n', currentPayload, bytesRead);
+					drawnow();
+					payload = [uint8(1), typecast(uint32(bytesRead), 'uint8')];
+					%fwrite(u, payload, 'uint8');
+					waitForBytes(u);
+					newData = fread(u, u.BytesAvailable, 'uint8');
+					bytesRead = bytesRead + max(size(newData));
+					data = [data; newData];
+				end
+				warning('on', 'instrument:fread:unsuccessfulRead');
+				
 				drawnow();
-				payload = [uint8(1), typecast(uint32(bytesRead), 'uint8')];
+				%fprintf('2 currentPayload = %d\tbytesRead = %d\n', currentPayload, bytesRead);
+				payload = [uint8(0), typecast(uint32(bytesRead), 'uint8')];
 				fwrite(u, payload, 'uint8');
-				newData = fread(u, currentPayload, 'uint8');
-				bytesRead = bytesRead + max(size(newData));
-				data = [data; newData];
-			end
-			warning('on', 'instrument:fread:unsuccessfulRead');
-			drawnow();
-			
-			payload = [uint8(0), typecast(uint32(bytesRead), 'uint8')];
-			fwrite(u, payload, 'uint8');
 
-			currentCommand = data(1);
+				currentCommand = data(1);
 
-			switch currentCommand
-				case Command.Function
-					currentFunction = data(2);
-					currentPayload = double(typecast(uint8(data(3:end)), 'uint64'));
-				case Command.Data
-					switch currentFunction
-						case Function.Plot
-							hlines = Plot(data, holdOn);
-						case Function.Figure
-							figure;
-							drawnow;
+				switch currentCommand
+					case Command.Function
+						currentFunction = data(2);
+						currentPayload = double(typecast(uint8(data(3:end)), 'uint64'));
+					case Command.Data
+						switch currentFunction
+							case Function.Plot
+								hlines = Plot(data, holdOn, currentFunction);
+							case Function.Figure
+								figure;
+								drawnow;
 
-						case Function.SetupPlot
-							SetupPlot(data', hlines);
-							
-						case Function.Print
-							Print(data);
-							
-						case Function.Xlabel
-							textLabel(currentFunction, data');
-							
-						case Function.Ylabel
-							textLabel(currentFunction, data');
-							
-						case Function.Title
-							textLabel(currentFunction, data');
+							case Function.SetupPlot
+								SetupPlot(data', hlines);
 
-						case Function.Subplot
-							Subplot(data);
-							
-						case Function.Legend
-							Legend(data');
-							
-						case Function.Hold
-							if(data(2) == 1)
-								hold on;
-								holdOn = true;
-							elseif(data(2) == 0)
-								hold off;
-								holdOn = false;
-							end
-							
-						case Function.Axis
-							
-							Axis(data);
-							
-						case Function.Grid
-							if(data(2) == 1)
-								grid on;
-							elseif(data(2) == 0)
-								grid off;
-							end
-						otherwise
-							
-					end
-					
-					currentFunction = Function.None;
-					currentPayload = 1;
-					drawnow;
-				case Command.Done
-					currentPayload = 10;
-				otherwise
-					
+							case Function.Print
+								Print(data);
+
+							case Function.Xlabel
+								textLabel(currentFunction, data');
+
+							case Function.Ylabel
+								textLabel(currentFunction, data');
+
+							case Function.Title
+								textLabel(currentFunction, data');
+
+							case Function.Subplot
+								Subplot(data);
+
+							case Function.Legend
+								Legend(data');
+
+							case Function.Hold
+								if(data(2) == 1)
+									hold on;
+									holdOn = true;
+								elseif(data(2) == 0)
+									hold off;
+									holdOn = false;
+								end
+
+							case Function.Axis
+								Axis(data);
+
+							case Function.Grid
+								if(data(2) == 1)
+									grid on;
+								elseif(data(2) == 0)
+									grid off;
+								end
+								
+							case Function.Semilogx
+								hlines = Plot(data, holdOn, currentFunction);
+								
+							case Function.Semilogy
+								hlines = Plot(data, holdOn, currentFunction);
+								
+							case Function.Loglog
+								hlines = Plot(data, holdOn, currentFunction);
+								
+							otherwise
+
+						end
+
+						currentFunction = Function.None;
+						currentPayload = 1;
+						drawnow;
+					case Command.Done
+						currentPayload = 10;
+						
+					case Command.Close
+						fprintf('Closing connection\n');
+						fwrite(u, uint8([0, 4, 255, 89, 255]), 'uint8');
+						fclose(u);
+						connected = false;
+					otherwise
+
+				end
 			end
 		end
 	catch ME
 		SendException(u, ME);
 		fclose(u);
+		throw(ME);
 	end
 end
 
@@ -323,28 +354,25 @@ function Axis(data)
 
 end
 
-function hlines = Plot(data, holdOn)
+function hlines = Plot(data, holdOn, func)
 	
 	dataFormat = data(2);
 	numLines = data(3);
 	
 	dataPtr = 4;
-	
-	x = zeros(2, 1);
-	y = zeros(2, 1);
 
 	for i=0:numLines-1
 		
 		length = typecast(uint8(data(dataPtr:dataPtr+3)), 'uint32');
 		dataPtr = dataPtr + 4;
-		x = zeros(length/8, numLines);
-		y = zeros(length/8, numLines);
+		x = zeros(length/8, 1);
+		y = zeros(length/8, 1);
 		for j=0:length/8-1
-			x(j+1, i+1) = typecast(uint8(data(dataPtr:dataPtr+7)), 'double');
+			x(j+1) = typecast(uint8(data(dataPtr:dataPtr+7)), 'double');
 			dataPtr = dataPtr + 8;
 		end
 		for j=0:length/8-1
-			y(j+1, i+1) = typecast(uint8(data(dataPtr:dataPtr+7)), 'double');
+			y(j+1) = typecast(uint8(data(dataPtr:dataPtr+7)), 'double');
 			dataPtr = dataPtr + 8;
 		end
 		if(dataFormat == 1)
@@ -356,11 +384,34 @@ function hlines = Plot(data, holdOn)
 				dataPtr = dataPtr + 1;
 			end
 			
-			hlines(i+1,1) = plot(x, y, char(frmt));
+			switch func
+				case Function.Plot
+					hlines(i+1,1) = plot(x, y, char(frmt));
+				case Function.Semilogx
+					hlines(i+1,1) = semilogx(x, y, char(frmt));
+				case Function.Semilogy
+					hlines(i+1,1) = semilogy(x, y, char(frmt));
+				case Function.Loglog
+					hlines(i+1,1) = loglog(x, y, char(frmt));
+				otherwise
+					
+			end
 			hold on;
 			drawnow;
 		elseif(dataFormat == 0)
-			hlines(i+1,1) = plot(x, y);
+			switch func
+				case Function.Plot
+					hlines(i+1,1) = plot(x, y);
+				case Function.Semilogx
+					hlines(i+1,1) = semilogx(x, y);
+				case Function.Semilogy
+					hlines(i+1,1) = semilogy(x, y);
+				case Function.Loglog
+					hlines(i+1,1) = loglog(x, y);
+				otherwise
+					
+			end
+
 			hold on;
 			drawnow;
 		end

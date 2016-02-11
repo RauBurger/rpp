@@ -4,5 +4,6 @@ classdef Command < uint8
 		Function(0)
 		Data(1)
 		Done(2)
+		Close(3)
 	end
 end

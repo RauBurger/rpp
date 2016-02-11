@@ -8,12 +8,14 @@
 		"rpp:example_0": "*",
 		"rpp:example_1": "*",
 		"rpp:example_2": "*",
-		"rpp:example_3": "*"
+		"rpp:example_3": "*",
+		"rpp:example_4": "*"
 	},
 	"subPackages": [
 		"./examples/example_0",
 		"./examples/example_1",
 		"./examples/example_2",
-		"./examples/example_3"
+		"./examples/example_3",
+		"./examples/example_4"
 	]
 }

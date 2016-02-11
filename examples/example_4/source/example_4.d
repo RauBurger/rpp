@@ -1,4 +1,4 @@
-module example_3;
+module example_4;
 
 import std.stdio;
 import std.math;
@@ -30,15 +30,19 @@ int main(char[][] args)
 		u1[i] = erf(_x);
 
 	figure();
-	subplot(1, 2, 1); plot(x, u);
-	setupPlot("$x$", "$u$", ["line"], 12, "");
-	axis([-12, 12, -1, 1]);
-	title("Some lines!");
+	subplot(1, 3, 1); semilogx(x, u, "r", x, u1, "b");
+	setupPlot("$x$", "$u$", ["line", "other line"], 12, "south");
+	title("log(x) scale");
 
-	subplot(1, 2, 2); plot(x, u1);
-	setupPlot("$x$", "$u$", ["line"], 12, "");
+	subplot(1, 3, 2); semilogy(x, u, "r", x, u1, "b");
+	setupPlot("$x$", "$u$", ["line", "other line"], 12, "southeast");
 	axis("square");
-	title("Some lines!");
+	title("log(y) scale");
+
+	subplot(1, 3, 3); loglog(x, u, "r", x, u1, "b");
+	setupPlot("$x$", "$u$", ["line", "other line"], 12, "east");
+	grid!"on"();
+	title("Log-log scale");
 
 	return 0;
 }

@@ -565,6 +565,11 @@ class rpc
 		SendDoneCommand();
 	}
 
+	static void contour(Line...)(Line lines)
+	{
+		
+	}
+
 	private static void SendData(ubyte[] data)
 	{
 		ptrdiff_t sentBytes = server.sendTo(data, serverAddr);

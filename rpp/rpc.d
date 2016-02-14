@@ -24,6 +24,7 @@ alias hold = rpc.hold;
 alias axis = rpc.axis;
 alias setupPlot = rpc.setupPlot;
 alias grid = rpc.grid;
+alias contour = rpc.contour;
 alias semilogx = rpc.semilogx;
 alias semilogy = rpc.semilogy;
 alias loglog = rpc.loglog;
@@ -150,9 +151,9 @@ class rpc
 			ThrowPlotException(respData);
 	}
 
-	private static ubyte[T.sizeof] toUBytes(T)(T data) if (isIntegral!T || is(T : double) || is(T : float))
+	private static ubyte[T.sizeof] toUBytes(T)(T data)
+		if (isIntegral!T || isFloatingPoint!T)
 	{
-		static assert(isIntegral!T || is(T : double) || is(T : float), "Only integral types supported");
 		union conv
 		{
 			T type;
@@ -160,6 +161,29 @@ class rpc
 		}
 		conv tb = { type : data };
 		return tb.b;
+	}
+
+	private static ubyte[] toUBytes(sizeT, T)(T[] data)
+		if(isIntegral!T || isFloatingPoint!T)
+	{
+		ubyte[] bytes;// = new ubyte[sizeT.sizeof + data.length*T.sizeof];
+		bytes ~= toUBytes!sizeT(data.length*T.sizeof);
+		foreach(el; data)
+			bytes ~= toUBytes!T(el);
+
+		return bytes;
+	}
+
+	private static ubyte[] toUBytes(sizeT, T)(T[][] data)
+		if(isIntegral!T || isFloatingPoint!T)
+	{
+		ubyte[] bytes;// = new ubyte[sizeT.sizeof + data.length*T.sizeof*data[0].length];
+		bytes ~= toUBytes!sizeT(data.length*T.sizeof*data[0].length);
+		foreach(slice; data)
+			foreach(el; slice)
+				bytes ~= toUBytes!T(el);
+
+		return bytes;
 	}
 
 	private static ubyte[] toUBytes(T)(string str)
@@ -237,6 +261,12 @@ class rpc
 		plotImpl!(Function.Loglog)(args);
 	}
 
+	enum PlotFormat : ubyte
+	{
+		NoFormatStr = 0,
+		FormatStr
+	}
+
 	private static void plotImpl(Function func, Line...)(Line args)
 	{
 		alias lines = AliasSeq!(args);
@@ -248,14 +278,14 @@ class rpc
 		static if(is(typeof(lines[$-1]) == real[]) || lines.length == 2)
 		{
 			static assert(lines.length%2 == 0, "Invalid number of arguments");
-			plotData~=0x0;
-			plotData~= lines.length/2;
+			plotData ~= PlotFormat.NoFormatStr;
+			plotData ~= lines.length/2;
 		}
 		else static if(is(typeof(lines[2]) == string))
 		{
 			static assert(lines.length%3 == 0, "Invalid number of arguments");
-			plotData~=0x1;
-			plotData~= lines.length/3;
+			plotData ~= PlotFormat.FormatStr;
+			plotData ~= lines.length/3;
 		}
 		else
 			static assert(false, "Invalid parameters");
@@ -565,9 +595,25 @@ class rpc
 		SendDoneCommand();
 	}
 
-	static void contour(Line...)(Line lines)
+	static void contour(options...)(real[][] Z, options args)
 	{
-		
+		ubyte[] contourData;
+		contourData ~= Command.Data;
+		contourData ~= toUBytes!uint(Z);
+        contourData ~= optionsToUbytes(args);
+	}
+
+	static void contour(T, options...)(real[][] Z, T n, countoptions args) if(is(T : int) || is(T : int[]))
+	{
+		ubyte[] contourData;
+		contourData ~= Command.Data;
+		contourData ~= toUBytes!uint(Z);
+        contourData ~= toUBytes!T(n);
+	}
+
+	private static void contourImpl(int type, data...)(data allthedata)
+	{
+
 	}
 
 	private static void SendData(ubyte[] data)
@@ -588,10 +634,8 @@ class rpc
 			ThrowPlotException(respData);
 	}
 
-	private static T get(T)(ubyte[] data)
+	private static T get(T)(ubyte[] data) if(isIntegral!T || is(T : double) || is(T : float))
 	{
-		static assert(isIntegral!T || is(T : double) || is(T : float), "Only integral types supported");
-
 		union conv
 		{
 			T type;

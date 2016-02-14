@@ -40,5 +40,9 @@ int main(char[][] args)
 	axis("square");
 	title("Some lines!");
 
+	real[][] Z = new real[][](cast(uint)abs(start), cast(uint)abs(end));
+	figure();
+	contour(Z);
+
 	return 0;
 }

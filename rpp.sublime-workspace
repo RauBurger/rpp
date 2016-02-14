@@ -4,6 +4,38 @@
 		"selected_items":
 		[
 			[
+				"le",
+				"length"
+			],
+			[
+				"opt",
+				"options"
+			],
+			[
+				"A",
+				"AliasSeq"
+			],
+			[
+				"examp",
+				"example_3"
+			],
+			[
+				"subplo",
+				"subplotData"
+			],
+			[
+				"subpl",
+				"subplotData"
+			],
+			[
+				"op",
+				"optionsToUbytes"
+			],
+			[
+				"sub",
+				"subplotData"
+			],
+			[
 				"SocketO",
 				"SocketOption	enum"
 			],
@@ -42,10 +74,6 @@
 			[
 				"lab",
 				"labelNames	variable"
-			],
-			[
-				"examp",
-				"example_1"
 			],
 			[
 				"Send",
@@ -88,18 +116,10 @@
 	"buffers":
 	[
 		{
-			"file": "rpp/rpc.d",
-			"settings":
-			{
-				"buffer_size": 14304,
-				"line_ending": "Windows"
-			}
-		},
-		{
 			"file": "examples/example_0/source/example_0.d",
 			"settings":
 			{
-				"buffer_size": 566,
+				"buffer_size": 502,
 				"line_ending": "Unix"
 			}
 		},
@@ -107,7 +127,7 @@
 			"file": "examples/example_1/source/example_1.d",
 			"settings":
 			{
-				"buffer_size": 973,
+				"buffer_size": 876,
 				"line_ending": "Windows"
 			}
 		},
@@ -115,7 +135,15 @@
 			"file": "examples/example_2/source/example_2.d",
 			"settings":
 			{
-				"buffer_size": 706,
+				"buffer_size": 656,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "examples/example_3/source/example_3.d",
+			"settings":
+			{
+				"buffer_size": 862,
 				"line_ending": "Windows"
 			}
 		},
@@ -123,7 +151,7 @@
 			"file": "dub.json",
 			"settings":
 			{
-				"buffer_size": 339,
+				"buffer_size": 439,
 				"line_ending": "Windows"
 			}
 		},
@@ -150,27 +178,55 @@
 				"buffer_size": 132,
 				"line_ending": "Unix"
 			}
+		},
+		{
+			"file": "examples/example_3/dub.json",
+			"settings":
+			{
+				"buffer_size": 132,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "doc/ProtocolDefinition/ProtocolDefinition.tex",
+			"settings":
+			{
+				"buffer_size": 4050,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "/C/cygwin64/home/Rob Rau/.bashrc",
+			"settings":
+			{
+				"buffer_size": 4245,
+				"line_ending": "Unix"
+			}
 		}
 	],
 	"build_system": "",
 	"command_palette":
 	{
-		"height": 0.0,
+		"height": 150.0,
 		"selected_items":
 		[
+			[
+				"Package Control: in",
+				"Package Control: Install Package"
+			]
 		],
-		"width": 0.0
+		"width": 400.0
 	},
 	"console":
 	{
-		"height": 0.0
+		"height": 153.0
 	},
 	"distraction_free":
 	{
 		"menu_visible": true,
 		"show_minimap": false,
 		"show_open_files": false,
-		"show_tabs": false,
+		"show_tabs": true,
 		"side_bar_visible": false,
 		"status_bar_visible": false
 	},
@@ -210,6 +266,10 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"axis",
+			"axes",
+			"sentB",
+			"axes",
 			"toUB",
 			"getUint32",
 			"get!string",
@@ -232,50 +292,50 @@
 	"groups":
 	[
 		{
+			"selected": 3,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "rpp/rpc.d",
+					"file": "examples/example_0/source/example_0.d",
 					"settings":
 					{
-						"buffer_size": 14304,
+						"buffer_size": 502,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3285,
-								3285
+								54,
+								54
 							]
 						],
 						"settings":
 						{
-							"history_list_is_closing": true,
 							"syntax": "Packages/D/D.tmLanguage",
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 29.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "examples/example_0/source/example_0.d",
+					"file": "examples/example_1/source/example_1.d",
 					"settings":
 					{
-						"buffer_size": 566,
+						"buffer_size": 876,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								435,
-								435
+								564,
+								564
 							]
 						],
 						"settings":
@@ -291,10 +351,10 @@
 				},
 				{
 					"buffer": 2,
-					"file": "examples/example_1/source/example_1.d",
+					"file": "examples/example_2/source/example_2.d",
 					"settings":
 					{
-						"buffer_size": 973,
+						"buffer_size": 656,
 						"regions":
 						{
 						},
@@ -318,18 +378,18 @@
 				},
 				{
 					"buffer": 3,
-					"file": "examples/example_2/source/example_2.d",
+					"file": "examples/example_3/source/example_3.d",
 					"settings":
 					{
-						"buffer_size": 706,
+						"buffer_size": 862,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								0,
-								0
+								822,
+								822
 							]
 						],
 						"settings":
@@ -348,7 +408,7 @@
 					"file": "dub.json",
 					"settings":
 					{
-						"buffer_size": 339,
+						"buffer_size": 439,
 						"regions":
 						{
 						},
@@ -448,6 +508,87 @@
 						"zoom_level": 1.0
 					},
 					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "examples/example_3/dub.json",
+					"settings":
+					{
+						"buffer_size": 132,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								21,
+								21
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JSON.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "doc/ProtocolDefinition/ProtocolDefinition.tex",
+					"settings":
+					{
+						"buffer_size": 4050,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3554,
+								3556
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/LaTeX/LaTeX.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2000.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "/C/cygwin64/home/Rob Rau/.bashrc",
+					"settings":
+					{
+						"buffer_size": 4245,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								4245,
+								4245
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/ShellScript/Shell-Unix-Generic.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1995.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
 				}
 			]
 		}
@@ -483,6 +624,10 @@
 		]
 	},
 	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 118.0
+	},
 	"output.find_results":
 	{
 		"height": 0.0

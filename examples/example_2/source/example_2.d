@@ -32,6 +32,6 @@ int main(char[][] args)
 	plot(x, u, "r", x, u1, "b");
 	setupPlot("$x$", "$u$", ["$u$", "$u_1$"], 12, "northwest");
 	title("Some lines!");
-
+	
 	return 0;
 }

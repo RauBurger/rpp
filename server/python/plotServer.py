@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import socket
+import enums 
 
 def Plot(data):
 	print('butts')
@@ -32,16 +33,16 @@ def serve():
 
 		currentCommand = data[0]
 		print('currentCommand = '+str(currentCommand))
-		if currentCommand == 0: # function command
+		if currentCommand == enums.Command.Function: # function command
 			currentFunction = data[1]
 			currentPayload = int.from_bytes(data[2:-1], 'little', signed=False)
 			print('currentFunction = '+str(currentFunction))
 			print('currentPayload = '+str(currentPayload))
 
-		elif currentCommand == 1: # data command
-			if currentFunction == 0: # plot function
+		elif currentCommand == enums.Command.Data: # data command
+			if currentFunction == enums.Function.Plot: # plot function
 				Plot(data)
-			elif currentFunction == 1: # figure function
+			elif currentFunction == enums.Function.Figure: # figure function
 				Figure(data)
 
 

@@ -1,5 +1,33 @@
 import matplotlib.pyplot as plt
 import socket
+#import enums 
+
+class Command:
+	Idle = -1
+	Function = 0
+	Data = 1
+	Done = 2
+	Close = 3
+
+class Function:
+	Nothing = -1
+	Plot = 0
+	Figure = 1
+	SetupPlot = 2
+	Print = 3
+	Xlabel = 4
+	Ylabel = 5
+	Title = 6
+	Subplot = 7
+	Legend = 8
+	Hold = 9
+	Axis = 1
+	Grid = 1
+	Contour = 1
+	Colorbar = 1
+	Semilogx = 1
+	Semilogy = 15
+	Loglog = 16
 
 def Plot(data):
 	print('butts')
@@ -32,16 +60,16 @@ def serve():
 
 		currentCommand = data[0]
 		print('currentCommand = '+str(currentCommand))
-		if currentCommand == 0: # function command
+		if currentCommand == Command.Function: # function command
 			currentFunction = data[1]
 			currentPayload = int.from_bytes(data[2:-1], 'little', signed=False)
 			print('currentFunction = '+str(currentFunction))
 			print('currentPayload = '+str(currentPayload))
 
-		elif currentCommand == 1: # data command
-			if currentFunction == 0: # plot function
+		elif currentCommand == Command.Data: # data command
+			if currentFunction == Function.Plot: # plot function
 				Plot(data)
-			elif currentFunction == 1: # figure function
+			elif currentFunction == Function.Figure: # figure function
 				Figure(data)
 
 

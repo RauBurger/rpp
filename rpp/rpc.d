@@ -5,6 +5,7 @@ import std.stdio;
 import std.meta;
 import std.conv;
 import std.traits;
+import std.file;
 
 import rpp.util;
 

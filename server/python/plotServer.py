@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import matplotlib.pyplot as plt
 import socket
 import enums 
@@ -12,6 +14,8 @@ def Figure(data):
 
 def serve():
 
+	print('Waiting for connection')
+
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	sock.bind(('127.0.0.1', 54000))
 	sock.listen(0)
@@ -20,7 +24,8 @@ def serve():
 	client.send(b'\x00\xFF\xFF\xFF\xFF')
 	print('sent connection bytes')
 	currentPayload = 10;
-	currentFunction = '';
+	currentFunction = ''
+
 	while 1:
 		# get data from client
 		data = client.recv(currentPayload)
@@ -44,6 +49,7 @@ def serve():
 				Plot(data)
 			elif currentFunction == enums.Function.Figure: # figure function
 				Figure(data)
+
 
 
 		#print(data)

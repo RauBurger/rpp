@@ -4,6 +4,7 @@ import std.socket;
 import std.stdio;
 import std.meta;
 import std.conv;
+import std.traits;
 
 import rpp.util;
 
@@ -238,7 +239,7 @@ private static void plotImpl(Function func, Line...)(Line args)
 		{
 			static if(i % mod() == 0)
 			{
-				static assert(is(typeof(sym) == real[]));
+				static assert(is(typeof(sym) == real[]) || is(typeof(sym) == double[]) || is(typeof(sym) == float[]));
 
 				uint length = cast(uint)sym.length*8; // array length in bytes
 
@@ -249,7 +250,7 @@ private static void plotImpl(Function func, Line...)(Line args)
 			}
 			else static if(i % mod() == 1)
 			{
-				static assert(is(typeof(sym) == real[]));
+				static assert(is(typeof(sym) == real[]) || is(typeof(sym) == double[]) || is(typeof(sym) == float[]));
 
 				foreach(el; sym)
 					plotData ~= toUBytes!double(el);

@@ -5,7 +5,6 @@ import std.math;
 import std.mathspecial;
 
 import rpp.rpc;
-import numd.utility;
 
 struct Meshgrid
 {
@@ -26,6 +25,18 @@ Meshgrid meshgrid(real[] x, real[] y)
 			mesh.Y[i][j] = y[i];
 
 	return mesh;
+}
+
+real[] linspace(real start, real end, int points)
+{
+	real h = (end-start)/(points-1);
+	real[] x = new real[points];
+	x[0] = start;
+	for(int i = 1; i < points; i++)
+	{
+		x[i] = x[i-1]+h;
+	}
+	return x;
 }
 
 int main(char[][] args)

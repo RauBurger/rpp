@@ -55,22 +55,24 @@ private enum Command : ubyte
 private enum Function : ubyte
 {
 	Plot = 0,	// done
-	Figure,		// done
-	SetupPlot,	// done
-	Print,		// done
-	Xlabel,		// done
-	Ylabel,		// done
-	Title,		// done
-	Subplot,	// done - testing
-	Legend,		// done
-	Hold,		// done
-	Axis,		// done
-	Grid,		// done
-	Contour,	//
-	Colorbar,	//
-	Semilogx,	// done
-	Semilogy,	// done
-	Loglog		// done
+	Figure,		// 1	done
+	SetupPlot,	// 2	done
+	Print,		// 3	done
+	Xlabel,		// 4	done
+	Ylabel,		// 5	done
+	Title,		// 6	done
+	Subplot,	// 7	done - testing
+	Legend,		// 8	done
+	Hold,		// 9	done
+	Axis,		// 10	done
+	Grid,		// 11	done
+	Contour,	// 12
+	Contourf,	// 13
+	Contour3,	// 14
+	Colorbar,	// 15
+	Semilogx,	// 16	done
+	Semilogy,	// 17	done
+	Loglog		// 18	done
 }
 
 private enum ServerResponce : ubyte
@@ -86,7 +88,7 @@ private static Socket server;
 private static Address serverAddr;
 private static Address serverRcv;
 
-static void initRPP(string remoteAddr, string localAddr, ushort remotePort, ushort localPort)
+void initRPP(string remoteAddr, string localAddr, ushort remotePort, ushort localPort)
 {
 	writeln("trying to connect to server");
 	
@@ -122,7 +124,7 @@ private static ~this()
 	server.close();
 }
 
-private static void SendFunctionCommand(Function func)(ulong dataLength)
+private void SendFunctionCommand(Function func)(ulong dataLength)
 {
 	ubyte[10] funcCommand;
 	funcCommand[0] = Command.Function;
@@ -182,22 +184,22 @@ private static int argMod(T, ulong len)()
  * [2*n+1] = format string idx 0
  */
 
-static void plot(Line...)(Line args)
+void plot(Line...)(Line args)
 {
 	plotImpl!(Function.Plot)(args);
 }
 
-static void semilogx(Line...)(Line args)
+void semilogx(Line...)(Line args)
 {
 	plotImpl!(Function.Semilogx)(args);
 }
 
-static void semilogy(Line...)(Line args)
+void semilogy(Line...)(Line args)
 {
 	plotImpl!(Function.Semilogy)(args);
 }
 
-static void loglog(Line...)(Line args)
+void loglog(Line...)(Line args)
 {
 	plotImpl!(Function.Loglog)(args);
 }
@@ -208,7 +210,7 @@ enum PlotFormat : ubyte
 	FormatStr
 }
 
-private static void plotImpl(Function func, Line...)(Line args)
+private void plotImpl(Function func, Line...)(Line args)
 {
 	alias lines = AliasSeq!(args);
 	static assert(lines.length >= 2, "Not enough input arguments");
@@ -261,8 +263,7 @@ private static void plotImpl(Function func, Line...)(Line args)
 				static assert(is(typeof(sym) == string));
 				immutable string lineStyle = cast(immutable string)sym;
 
-				plotData ~= cast(ubyte)lineStyle.length;
-				plotData ~= lineStyle[];
+				plotData ~= lineStyle.toUBytes!ubyte();
 			}
 		}
 	}
@@ -272,7 +273,7 @@ private static void plotImpl(Function func, Line...)(Line args)
 	SendDoneCommand();
 }
 
-static void figure()
+void figure()
 {
 	SendFunctionCommand!(Function.Figure)(1);
 	SendData([Command.Data]);
@@ -291,7 +292,7 @@ static void figure()
  * [n+1] = format data start
  */
 
-static void print(string format)(string path)
+void print(string format)(string path)
 {
 	string newPath = "";
 	if(path[0] != '/' || path[0] != '~')
@@ -345,7 +346,7 @@ static void print(string format)(string path)
  *
  *
  */
-static void setupPlot(string xlabel, string ylabel, string[] legendNames, ubyte fontSize, string legendLoc)
+void setupPlot(string xlabel, string ylabel, string[] legendNames, ubyte fontSize, string legendLoc)
 {
 	ubyte[] setupData;
 	setupData ~= Command.Data;
@@ -355,9 +356,7 @@ static void setupPlot(string xlabel, string ylabel, string[] legendNames, ubyte 
 
 	setupData ~= cast(ubyte)legendNames.length;
 	foreach(legendName; legendNames)
-	{
 		setupData ~= toUBytes!uint(legendName);
-	}
 
 	setupData ~= fontSize;
 
@@ -395,17 +394,17 @@ private static string typeStr(T)()
 		static assert(false, "type not supported");
 }
 
-static void xlabel(options...)(string label, options args)
+void xlabel(options...)(string label, options args)
 {
 	textLabelImpl!(Function.Xlabel)(label, args);
 }
 
-static void ylabel(options...)(string label, options args)
+void ylabel(options...)(string label, options args)
 {
 	textLabelImpl!(Function.Ylabel)(label, args);
 }
 
-private static void textLabelImpl(Function func, options...)(string label, options args)
+private void textLabelImpl(Function func, options...)(string label, options args)
 {
 	static assert((func == Function.Ylabel) || (func == Function.Xlabel) || (func == Function.Title), "Incorrect function type for label");
 	alias options = AliasSeq!(args);
@@ -449,12 +448,12 @@ private static ubyte[] optionsToUbytes(options...)(options args)
 	return data;
 }
 
-static void title(options...)(string title, options args)
+void title(options...)(string title, options args)
 {
 	textLabelImpl!(Function.Title)(title, args);
 }
 
-static void subplot(string opt = "", options...)(ubyte m, ubyte n, ubyte p, options args)
+void subplot(string opt = "", options...)(ubyte m, ubyte n, ubyte p, options args)
 {
 	ubyte[] subplotData;
 	subplotData ~= Command.Data;
@@ -472,7 +471,7 @@ static void subplot(string opt = "", options...)(ubyte m, ubyte n, ubyte p, opti
 	SendDoneCommand();
 }
 
-static void legend(options...)(string[] lines, options args)
+void legend(options...)(string[] lines, options args)
 {
 	ubyte[] legendData;
 
@@ -490,7 +489,7 @@ static void legend(options...)(string[] lines, options args)
 	SendDoneCommand();
 }
 
-static void axis(T)(T arg) if(is(T : string) || (isArray!T && isIntegral!(typeof(arg[0]))))
+void axis(T)(T arg) if(is(T : string) || (isArray!T && isIntegral!(typeof(arg[0]))))
 {
 	alias options = AliasSeq!arg;
 	ubyte[] axesData;
@@ -520,7 +519,7 @@ static void axis(T)(T arg) if(is(T : string) || (isArray!T && isIntegral!(typeof
 	SendDoneCommand();
 }
 
-static void hold(string onOff)()
+void hold(string onOff)()
 {
 	static assert((onOff == "on") || (onOff == "off"), "hold on or off, what are you doing");
 	SendFunctionCommand!(Function.Hold)(2);
@@ -528,7 +527,7 @@ static void hold(string onOff)()
 	SendDoneCommand();
 }
 
-static void grid(string onOff)()
+void grid(string onOff)()
 {
 	static assert((onOff == "on") || (onOff == "off"), "hold on or off, what are you doing");
 	SendFunctionCommand!(Function.Grid)(2);
@@ -536,28 +535,209 @@ static void grid(string onOff)()
 	SendDoneCommand();
 }
 
-static void contour(options...)(real[][] Z, options args)
+void contour(T, options...)(T[][] Z, options args)
+	if(isFloatingPoint!T && is(options[0] : string))
+{
+	contourImpl!(Function.Contour)(Z, args);
+}
+
+void contourf(T, options...)(T[][] Z, options args)
+	if(isFloatingPoint!T && is(options[0] : string))
+{
+	contourImpl!(Function.Contourf)(Z, args);
+}
+
+void contour3(T, options...)(T[][] Z, options args)
+	if(isFloatingPoint!T && is(options[0] : string))
+{
+	contourImpl!(Function.Contour3)(Z, args);
+}
+
+private void contourImpl(Function func, T, options...)(T[][] Z, options args)
+	if(isFloatingPoint!T && is(options[0] : string))
 {
 	ubyte[] contourData;
 	contourData ~= Command.Data;
-	contourData ~= toUBytes!uint(Z);
-    contourData ~= optionsToUbytes(args);
+	contourData ~= 0x0;
+	contourData ~= toUBytes!(uint, double)(Z);
+	contourData ~= optionsToUbytes(args);
+
+	SendFunctionCommand!(func)(contourData.length);
+	SendData(contourData);
+	SendDoneCommand();
 }
 
-static void contour(T, options...)(real[][] Z, T n, countoptions args) if(is(T : int) || is(T : int[]))
+void contour(T, options...)(T[][] Z, uint n, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	contourImpl!(Function.Contour)(Z, n, args);
+}
+
+void contourf(T, options...)(T[][] Z, uint n, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	contourImpl!(Function.Contourf)(Z, n, args);
+}
+
+void contour3(T, options...)(T[][] Z, uint n, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	contourImpl!(Function.Contour3)(Z, n, args);
+}
+
+private void contourImpl(Function func, T, options...)(T[][] Z, uint n, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
 {
 	ubyte[] contourData;
 	contourData ~= Command.Data;
-	contourData ~= toUBytes!uint(Z);
-    contourData ~= toUBytes!T(n);
+	contourData ~= 0x1;
+	contourData ~= toUBytes!(uint, double)(Z);
+	contourData ~= toUBytes!uint(n);
+	contourData ~= optionsToUbytes(args);
+
+	SendFunctionCommand!(func)(contourData.length);
+	SendData(contourData);
+	SendDoneCommand();
 }
 
-private static void contourImpl(int type, data...)(data allthedata)
+void contour(T, options...)(T[][] Z, uint[] v, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
 {
-
+	contourImpl!(Function.Contour)(Z, v, args);
 }
 
-private static void SendData(ubyte[] data)
+void contourf(T, options...)(T[][] Z, uint[] v, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	contourImpl!(Function.Contourf)(Z, v, args);
+}
+
+void contour3(T, options...)(T[][] Z, uint[] v, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	contourImpl!(Function.Contour3)(Z, v, args);
+}
+
+private void contourImpl(Function func, T, options...)(T[][] Z, uint[] v, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	ubyte[] contourData;
+	contourData ~= Command.Data;
+	contourData ~= 0x2;
+	contourData ~= toUBytes!(uint, double)(Z);
+	contourData ~= toUBytes!uint(v);
+	contourData ~= optionsToUbytes(args);
+	
+	SendFunctionCommand!(func)(contourData.length);
+	SendData(contourData);
+	SendDoneCommand();
+}
+
+void contour(T, options...)(T[][] X, T[][] Y, T[][] Z, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	contourImpl!(Function.Contour)(X, Y, Z, args);
+}
+
+void contourf(T, options...)(T[][] X, T[][] Y, T[][] Z, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	contourImpl!(Function.Contourf)(X, Y, Z, args);
+}
+
+void contour3(T, options...)(T[][] X, T[][] Y, T[][] Z, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	contourImpl!(Function.Contour3)(X, Y, Z, args);
+}
+
+private void contourImpl(Function func, T, options...)(T[][] X, T[][] Y, T[][] Z, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	ubyte[] contourData;
+	contourData ~= Command.Data;
+	contourData ~= 0x3;
+	contourData ~= toUBytes!(uint, double)(X);
+	contourData ~= toUBytes!(uint, double)(Y);
+	contourData ~= toUBytes!(uint, double)(Z);
+	contourData ~= optionsToUbytes(args);
+
+	SendFunctionCommand!(func)(contourData.length);
+	SendData(contourData);
+	SendDoneCommand();
+}
+
+void contour(T, options...)(T[][] X, T[][] Y, T[][] Z, uint n, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	contourImpl!(Function.Contour)(X, Y, Z, n, args);
+}
+
+void contourf(T, options...)(T[][] X, T[][] Y, T[][] Z, uint n, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	contourImpl!(Function.Contourf)(X, Y, Z, n, args);
+}
+
+void contour3(T, options...)(T[][] X, T[][] Y, T[][] Z, uint n, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	contourImpl!(Function.Contour3)(X, Y, Z, n, args);
+}
+
+private void contourImpl(Function func, T, options...)(T[][] X, T[][] Y, T[][] Z, uint n, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	ubyte[] contourData;
+	contourData ~= Command.Data;
+	contourData ~= 0x4;
+	contourData ~= toUBytes!(uint, double)(X);
+	contourData ~= toUBytes!(uint, double)(Y);
+	contourData ~= toUBytes!(uint, double)(Z);
+	contourData ~= toUBytes!uint(n);
+	contourData ~= optionsToUbytes(args);
+
+	SendFunctionCommand!(func)(contourData.length);
+	SendData(contourData);
+	SendDoneCommand();
+}
+
+void contour(T, options...)(T[][] X, T[][] Y, T[][] Z, uint[] v, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	contourImpl!(Function.Contour)(X, Y, Z, v, args);
+}
+
+void contourf(T, options...)(T[][] X, T[][] Y, T[][] Z, uint[] v, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	contourImpl!(Function.Contourf)(X, Y, Z, v, args);
+}
+
+void contour3(T, options...)(T[][] X, T[][] Y, T[][] Z, uint[] v, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	contourImpl!(Function.Contour3)(X, Y, Z, v, args);
+}
+
+private void contourImpl(Function func, T, options...)(T[][] X, T[][] Y, T[][] Z, uint[] v, options args)
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
+{
+	ubyte[] contourData;
+	contourData ~= Command.Data;
+	contourData ~= 0x5;
+	contourData ~= toUBytes!(uint, double)(X);
+	contourData ~= toUBytes!(uint, double)(Y);
+	contourData ~= toUBytes!(uint, double)(Z);
+	contourData ~= toUBytes!uint(v);
+	contourData ~= optionsToUbytes(args);
+
+	SendFunctionCommand!(func)(contourData.length);
+	SendData(contourData);
+	SendDoneCommand();
+}
+
+private void SendData(ubyte[] data)
 {
 	ptrdiff_t sentBytes = server.sendTo(data, serverAddr);
 
@@ -566,7 +746,7 @@ private static void SendData(ubyte[] data)
 	uint bytesReceived = get!uint(respData[1..$]);
 }
 
-private static void SendDoneCommand()
+private void SendDoneCommand()
 {
 	ptrdiff_t sentBytes = server.sendTo([Command.Done], serverAddr);
 	ubyte [5] respData;
@@ -575,7 +755,7 @@ private static void SendDoneCommand()
 		ThrowPlotException(respData);
 }
 
-private static void ThrowPlotException(ubyte[5] requestData)
+private void ThrowPlotException(ubyte[5] requestData)
 {
 	ubyte[] data = new ubyte[get!uint(requestData[1..$])];
 	uint offset = 0;

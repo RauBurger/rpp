@@ -1,6 +1,7 @@
 module rpp.util;
 
 import std.traits;
+import std.stdio;
 
 package ubyte[T.sizeof] toUBytes(T)(T data)
 	if (isIntegral!T || isFloatingPoint!T)
@@ -25,14 +26,15 @@ package ubyte[] toUBytes(sizeT, T)(T[] data)
 	return bytes;
 }
 
-package ubyte[] toUBytes(sizeT, T)(T[][] data)
+package ubyte[] toUBytes(sizeT, Tto, T)(T[][] data)
 	if(isIntegral!T || isFloatingPoint!T)
 {
 	ubyte[] bytes;
-	bytes ~= toUBytes!sizeT(data.length*T.sizeof*data[0].length);
+	bytes ~= toUBytes!sizeT(cast(sizeT)(data.length*Tto.sizeof));
+	bytes ~= toUBytes!sizeT(cast(sizeT)(data[0].length*Tto.sizeof));
 	foreach(slice; data)
 		foreach(el; slice)
-			bytes ~= toUBytes!T(el);
+			bytes ~= toUBytes!Tto(el);
 
 	return bytes;
 }

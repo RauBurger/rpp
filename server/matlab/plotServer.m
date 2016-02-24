@@ -107,6 +107,17 @@ function plotServer(address, remotePort, localPort)
 									grid off;
 								end
 								
+							case Function.Contour
+								Contour(data', Function.Contour);
+								
+							case Function.Contourf
+								Contour(data', Function.Contourf);
+								
+							case Function.Contour3
+								Contour(data', Function.Contour3);
+
+							case Function.Colorbar
+								
 							case Function.Semilogx
 								hlines = Plot(data, holdOn, currentFunction);
 								
@@ -183,14 +194,14 @@ function [str, offset] = getStr(lengthType, data, offset)
 		lengthSize = 4;
 	end
 
-	length = typecast(uint8(data(offset:offset+lengthSize-1)), lengthType);
+	len = double(typecast(uint8(data(offset:offset+lengthSize-1)), lengthType));
 	offset = offset + lengthSize;
-	if(length == 0)
+	if(len == 0)
 		str = '';
 	else
-		str = char(data(offset:offset+length-1));
+		str = char(data(offset:double(uint64(offset)+uint64(len)-uint64(1))));
 	end
-	offset = offset + length;
+	offset = offset + len;
 end
 
 function [num, offset] = getNum(numType, data, offset)
@@ -432,4 +443,146 @@ function Print(data)
 	format = char(data(3+length+2:3+length+1+formatLen)');
 	
 	print(path, format);
+end
+
+function [outArr, offset] = getArray(lenType, arrType, data, offset)
+	if(strcmp(lenType, 'uint16') || strcmp(lenType, 'int16'))
+		len = typecast(uint8(data(offset:offset+1)), lenType);
+		offset = offset + 2;
+	elseif(strcmp(lenType, 'uint32') || strcmp(lenType, 'int32') || strcmp(lenType, 'single'))
+		len = typecast(uint8(data(offset:offset+3)), lenType);
+		offset = offset + 4;
+	elseif(strcmp(lenType, 'uint64') || strcmp(lenType, 'int64') || strcmp(lenType, 'double'))
+		len = typecast(uint8(data(offset:offset+7)), lenType);
+		offset = offset + 8;
+	end
+
+	if(strcmp(arrType, 'uint16') || strcmp(arrType, 'int16'))
+		len = len/2;
+	elseif(strcmp(arrType, 'uint32') || strcmp(arrType, 'int32') || strcmp(arrType, 'single'))
+		len = len/4;
+	elseif(strcmp(arrType, 'uint64') || strcmp(arrType, 'int64') || strcmp(arrType, 'double'))
+		len = len/8;
+	end
+
+	outArr = zeros(len, 1);
+
+	for i=1:len
+		[outArr(i), offset] = getNum(arrType, data, offset);
+	end
+end
+
+function [outArr, offset] = get2DArray(lenType, arrType, data, offset)
+	if(strcmp(lenType, 'uint16') || strcmp(lenType, 'int16'))
+		len1 = typecast(uint8(data(offset:offset+1)), lenType);
+		offset = offset + 2;
+		len2 = typecast(uint8(data(offset:offset+1)), lenType);
+		offset = offset + 2;
+	elseif(strcmp(lenType, 'uint32') || strcmp(lenType, 'int32') || strcmp(lenType, 'single'))
+		len1 = typecast(uint8(data(offset:offset+3)), lenType);
+		offset = offset + 4;
+		len2 = typecast(uint8(data(offset:offset+3)), lenType);
+		offset = offset + 4;
+	elseif(strcmp(lenType, 'uint64') || strcmp(lenType, 'int64') || strcmp(lenType, 'double'))
+		len1 = typecast(uint8(data(offset:offset+7)), lenType);
+		offset = offset + 8;
+		len2 = typecast(uint8(data(offset:offset+7)), lenType);
+		offset = offset + 8;
+	end
+
+	if(strcmp(arrType, 'uint16') || strcmp(arrType, 'int16'))
+		len1 = len1/2;
+		len2 = len2/2;
+	elseif(strcmp(arrType, 'uint32') || strcmp(arrType, 'int32') || strcmp(arrType, 'single'))
+		len1 = len1/4;
+		len2 = len2/4;
+	elseif(strcmp(arrType, 'uint64') || strcmp(arrType, 'int64') || strcmp(arrType, 'double'))
+		len1 = len1/8;
+		len2 = len2/8;
+	end
+
+	outArr = zeros(len1, len2);
+
+	for i=1:len1
+		for j=1:len2
+			[outArr(i, j), offset] = getNum(arrType, data, offset);
+		end
+	end
+end
+
+function hlines = Contour(data, func)
+
+	funcType = data(2);
+	offset = 3;
+	fnStr = '';
+	switch func
+		case Function.Contour
+			funcTypeStr = 'contour';
+		case Function.Contourf
+			funcTypeStr = 'contourf';
+		case Function.Contour3
+			funcTypeStr = 'contour3';
+	end
+
+	switch funcType
+		case 0
+			[Z, offset] = get2DArray('uint32', 'double', data, offset);
+			fnStr = ['@(Z)', funcTypeStr, '(Z'];
+			[opts, offset] = parseOpts(data, offset);
+			fnStr = [fnStr, opts, ');'];
+			fn = str2func(fnStr);
+			hlines = fn(Z);
+
+		case 1
+			[Z, offset] = get2DArray('uint32', 'double', data, offset);
+			[n, offset] = getNum('uint32', data, offset);
+			fnStr = ['@(Z, n)', funcTypeStr, '(Z, n'];
+			[opts, offset] = parseOpts(data, offset);
+			fnStr = [fnStr, opts, ');'];
+			fn = str2func(fnStr);
+			hlines = fn(Z, n);
+
+		case 2
+			[Z, offset] = get2DArray('uint32', 'double', data, offset);
+			[v, offset] = getArray('uint32', 'uint32', data, offset);
+			fnStr = ['@(Z, v)', funcTypeStr, '(Z, v'];
+			[opts, offset] = parseOpts(data, offset);
+			fnStr = [fnStr, opts, ');'];
+			fn = str2func(fnStr);
+			hlines = fn(Z, v);
+
+		case 3
+			[X, offset] = get2DArray('uint32', 'double', data, offset);
+			[Y, offset] = get2DArray('uint32', 'double', data, offset);
+			[Z, offset] = get2DArray('uint32', 'double', data, offset);
+			fnStr = ['@(X, Y, Z)', funcTypeStr, '(X, Y, Z'];
+			[opts, offset] = parseOpts(data, offset);
+			fnStr = [fnStr, opts, ');'];
+			fn = str2func(fnStr);
+			hlines = fn(X, Y, Z);
+
+		case 4
+			[X, offset] = get2DArray('uint32', 'double', data, offset);
+			[Y, offset] = get2DArray('uint32', 'double', data, offset);
+			[Z, offset] = get2DArray('uint32', 'double', data, offset);
+			[n, offset] = getNum('uint32', data, offset);
+			fnStr = ['@(X, Y, Z, n)', funcTypeStr, '(X, Y, Z, n'];
+			[opts, offset] = parseOpts(data, offset);
+			fnStr = [fnStr, opts, ');'];
+			fn = str2func(fnStr);
+			hlines = fn(X, Y, Z, n);
+
+		case 5
+			[X, offset] = get2DArray('uint32', 'double', data, offset);
+			[Y, offset] = get2DArray('uint32', 'double', data, offset);
+			[Z, offset] = get2DArray('uint32', 'double', data, offset);
+			[v, offset] = getArray('uint32', 'uint32', data, offset);
+			fnStr = ['@(X, Y, Z, v)', funcTypeStr, '(X, Y, Z, v'];
+			[opts, offset] = parseOpts(data, offset);
+			fnStr = [fnStr, opts, ');'];
+			fn = str2func(fnStr);
+			hlines = fn(X, Y, Z, v);
+		otherwise
+			fprintf('bummer');
+	end
 end

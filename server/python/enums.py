@@ -21,7 +21,9 @@ class Function:
 	Axis, \
 	Grid, \
 	Contour, \
+	Contourf, \
+	Contour3, \
 	Colorbar, \
 	Semilogx, \
 	Semilogy, \
-	Loglog = range(17)
+	Loglog = range(19)

@@ -14,9 +14,11 @@ classdef Function < uint8
 		Axis(10)
 		Grid(11)
 		Contour(12)
-		Colorbar(13)
-		Semilogx(14)
-		Semilogy(15)
-		Loglog(16)
+		Contourf(13)
+		Contour3(14)
+		Colorbar(15)
+		Semilogx(16)
+		Semilogy(17)
+		Loglog(18)
 	end
 end

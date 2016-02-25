@@ -7,7 +7,7 @@ import rpp.rpc;
 
 int main(char[][] args)
 {
-	initRPP("127.0.0.1", "127.0.0.1", 54000, 55000);
+	initRPP(`127.0.0.1`, 54000);
 
 	real start = 0;
 	real end = 20;

@@ -1,24 +1,18 @@
-function plotServer(address, remotePort, localPort)
+function plotServer(port)
 
-	%u = udp(address, remotePort, 'LocalPort', localPort, 'Timeout', .005);
-	u = tcpip('0.0.0.0', 54000, 'NetworkRole', 'server', 'Timeout', 0.005);
+	u = tcpip('0.0.0.0', port, 'NetworkRole', 'server', 'Timeout', 0.005);
 	
 	c = onCleanup(@()cleanUp(u));
-	%t = timer('TimerFcn',@(x,y)timerCallback(x, y, u),'StartDelay',0, 'TasksToExecute', 1, 'ExecutionMode', 'fixedRate', 'Period', 0.1); % 
 	
 	try
 		holdOn = false;		
-		%u.InputBufferSize = 4096;
-		%u.InputBufferSize = 512;
+		
 		u.InputBufferSize = 9216;
 		
 		while(1)
-			%start(t);
+			
 			fopen(u);
-			%while(strcmp(u.Status, 'closed'))
-			%	fprintf('no connection\n');
-			%	drawnow;
-			%end
+			
 			fprintf('Server open\n');
 			connected = true;
 

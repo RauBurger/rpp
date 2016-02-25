@@ -84,11 +84,10 @@ private enum ServerResponce : ubyte
 	Disconnecting
 }
 
-private static Socket server;
-private static Address serverAddr;
-private static Address serverRcv;
+private Socket server;
+private Address serverAddr;
 
-void initRPP(string remoteAddr, string localAddr, ushort remotePort, ushort localPort)
+void initRPP(string remoteAddr, ushort port)
 {
 	writeln("trying to connect to server");
 	
@@ -97,9 +96,7 @@ void initRPP(string remoteAddr, string localAddr, ushort remotePort, ushort loca
 	server.setOption(SocketOptionLevel.TCP, SocketOption.TCP_NODELAY, 1);
 	
 	writeln("connected to server... I think");
-	serverAddr = new InternetAddress(to!(const(char[]))(remoteAddr), remotePort);
-	serverRcv = new InternetAddress(to!(const(char[]))(localAddr), localPort);
-	server.bind(serverRcv);
+	serverAddr = new InternetAddress(to!(const(char[]))(remoteAddr), port);
 	server.connect(serverAddr);
 	
 	ubyte[5] respData;
@@ -140,7 +137,7 @@ private void SendFunctionCommand(Function func)(ulong dataLength)
 		ThrowPlotException(respData);
 }
 
-private static int argMod(T, ulong len)()
+private int argMod(T, ulong len)()
 {
 	static if(is(T == real[]) || len == 2)
 		return 2;
@@ -367,7 +364,7 @@ void setupPlot(string xlabel, string ylabel, string[] legendNames, ubyte fontSiz
 	SendDoneCommand();
 }
 
-private static string typeStr(T)()
+private string typeStr(T)()
 {
 	static if(is(T : int))
 		return "i32";
@@ -420,7 +417,7 @@ private void textLabelImpl(Function func, options...)(string label, options args
 	SendDoneCommand();
 }
 
-private static ubyte[] optionsToUbytes(options...)(options args)
+private ubyte[] optionsToUbytes(options...)(options args)
 {
 	alias options = AliasSeq!args;
 	static assert(options.length%2 == 0, "Invalid number of options");

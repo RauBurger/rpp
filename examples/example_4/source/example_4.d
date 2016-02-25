@@ -8,7 +8,8 @@ import rpp.rpc;
 
 int main(char[][] args)
 {
-	initRPP("127.0.0.1", "127.0.0.1", 54000, 55000);
+	initRPP(`127.0.0.1`, 54000);
+	
 	real start = -12;
 	real end = 12;
 	int points = 1000;
@@ -40,7 +41,7 @@ int main(char[][] args)
 	title("log(y) scale");
 
 	subplot(1, 3, 3); loglog(x, u, "r", x, u1, "b");
-	setupPlot("$x$", "$u$", ["line", "other line"], 12, "east");
+	setupPlot("$x$", `$\rho$`, ["line", "other line"], 12, "east");
 	grid!"on"();
 	title("Log-log scale");
 

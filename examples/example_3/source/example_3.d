@@ -8,7 +8,8 @@ import rpp.rpc;
 
 int main(char[][] args)
 {
-	initRPP("127.0.0.1", "127.0.0.1", 54000, 55000);
+	initRPP(`127.0.0.1`, 54000);
+	
 	real start = -12;
 	real end = 12;
 	int points = 1000;

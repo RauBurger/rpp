@@ -8,65 +8,56 @@ import engine;
 import matrix;
 import mex;
 
-struct mArray
+double[] linspace(double start, double end, int points)
 {
-	private double[] data;
-	mxArray matlabData;
+	double h = (end-start)/(points-1);
+	double[] x = new double[points];
+	x[0] = start;
+	for(int i = 1; i < points; i++)
+	{
+		x[i] = x[i-1]+h;
+	}
+	return x;
+}
+
+struct mlArray
+{
+	private double* data;
+	mxArray* matlabData;
 	ulong length;
 
-	//alias matlabData this;
-
-	alias data this;
+	alias matlabData this;
 
 	this(ulong length)
 	{
-
-		data = new double[length];
-		mxSetPr(&matlabData, data.ptr);
-		mxSetM(&matlabData, length);
-		mxSetN(&matlabData, 1);
-		//matlabData = mxCreateDoubleMatrix(1, length, mxComplexity.mxREAL);
+		matlabData = mxCreateDoubleMatrix(1, length, mxComplexity.mxREAL);
 		
-		//data = mxGetPr(matlabData);
+		data = mxGetPr(matlabData);
 	}
 
 	this(double initdata, ulong length)
 	{
-		data = new double[length];
-		mxSetPr(&matlabData, data.ptr);
-		mxSetM(&matlabData, length);
-		mxSetN(&matlabData, 1);
-		data[] = initdata;
-		/*
 		this.length = length;
 		matlabData = mxCreateDoubleMatrix(1, length, mxComplexity.mxREAL);
 		
 		data = mxGetPr(matlabData);
-		data[1..length] = initdata;
-		*/
+		data[0..length] = initdata;
 	}
 
 	this(double[] initdata)
-	{
-		data = new double[length];
-		mxSetPr(&matlabData, data.ptr);
-		mxSetM(&matlabData, length);
-		mxSetN(&matlabData, 1);
-		data[] = initdata;
-		/*
+	{		
 		length = initdata.length;
 		matlabData = mxCreateDoubleMatrix(1, initdata.length, mxComplexity.mxREAL);
 		
 		data = mxGetPr(matlabData);
-		data[1..initdata.length] = initdata[];
-		*/
+		data[0..length] = initdata[];
 	}
 
 	~this()
 	{
-		//mxDestroyArray(matlabData);
+		mxDestroyArray(matlabData);
 	}
-/*
+
 	ref double opIndex(ulong idx)
 	{
 		writeln("in opIndex 1");
@@ -114,7 +105,6 @@ struct mArray
 		}
 		return result;
 	}
-	*/
 }
 
 extern (C) int RunMatlab()
@@ -123,16 +113,16 @@ extern (C) int RunMatlab()
 	
 	Engine* engine = engOpen("");
 
-	mArray arr = mArray(100);
-
 	if(engine == null)
 	{
 		writeln("Engine failed to open");
 		return -1;
 	}
 
+	mlArray arr = mlArray(linspace(0, 10, 100));
+
 	writeln("Copied array, off to matlab");
-	engPutVariable(engine, "T", &arr.matlabData);
+	engPutVariable(engine, "T", arr);
 
 	writeln("making thing");
 	engEvalString(engine, "D = T.^2;");
@@ -143,10 +133,14 @@ extern (C) int RunMatlab()
 	writeln("Press return");
 	readln();
 
+	foreach(int i, ref el; arr)
+		el = to!double(i);
+
+	engPutVariable(engine, "T", arr);
+
 	engEvalString(engine, "figure;");
 	engEvalString(engine, `hlines = plot(D, T, 'r', D, -T, 'g');`);
 	engEvalString(engine, `setupPlot(hlines, '$D$', '$T$', {'line1', 'line2'}, 12, 'northwest');`);
-
 
 	writeln("Press return to exit");
 	readln();

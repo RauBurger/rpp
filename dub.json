@@ -19,5 +19,11 @@
 		"./examples/example_3",
 		"./examples/example_4",
 		"./examples/example_5"
-	]
+	],
+	"buildTypes": {
+		"debug": {
+			"buildOptions": ["debugMode", "debugInfo"],
+			"dflags": ["-fPIC"]
+		}
+	}
 }

@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import socket
 import enums 
 import struct
+import numpy as np
+
+numTypes = {'uint16':'<H', 'int16':'<h', 'uint32':'<L', 'int32':'<l', 'single':'<I', 'uint64':'<Q', 'int64':'<q', 'double':'<d'}
 
 def Plot(data):
 	print(type(data))
@@ -14,6 +17,7 @@ def Plot(data):
 	dataOffset = 3;
 	for idx in range(lines):
 
+		#linelen, dataOffset = getNum('uinst32', data, dataOffset)
 		lineLen = int(int.from_bytes(data[dataOffset:dataOffset+4], 'little', signed=False)/8)
 		print("lineLen = "+str(lineLen))
 
@@ -57,6 +61,21 @@ def Figure(data):
 	print('in figure')
 	plt.figure()
 	plt.show(block=False)
+
+def getNum(numType, data, offset):
+	if (numType == 'uint16' or numType == 'int16'):
+		num = struct.unpack(numTypes[numType], data[offset:offset+2])[0]
+		offset = offset + 2;
+
+	elif( numType == 'uint32' or numType == 'int32' or numType == 'single'):
+		num = struct.unpack(numTypes[numType], data[offset:offset+4])[0]
+		offset = offset + 4;
+
+	elif(numType == 'uint64' or numType == 'int64' or numType == 'double'):
+		num = struct.unpack(numTypes[numType], data[offset:offset+8])[0]
+		offset = offset + 8
+
+	return num, offset
 
 def serve():
 
@@ -111,6 +130,8 @@ def serve():
 		elif currentCommand == enums.Command.Close:
 			plt.show()
 		
+		a = getNum('uint32', data, 3)
+		print(a)
 
 
 if __name__ == '__main__':

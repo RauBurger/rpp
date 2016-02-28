@@ -3,10 +3,13 @@ module rpp.server.rps;
 import std.stdio;
 import std.traits;
 import std.conv;
+import std.socket;
 
 import rpp.server.matlab.engine;
 import rpp.server.matlab.matrix;
 import rpp.server.matlab.mex;
+import rpp.common.utilities;
+import rpp.common.enums;
 
 double[] linspace(double start, double end, int points)
 {
@@ -149,6 +152,53 @@ extern (C) int RunMatlab()
 	writeln("Goodbye");
 
 	return 0;
+}
+
+Socket server;
+
+static ~this()
+{
+	if(server is null)
+	{
+		server.close();
+	}
+}
+
+void StartServer(ushort port)
+{
+	server = new TcpSocket(AddressFamily.INET);
+	server.blocking = true;
+	server.bind(new InternetAddress("0.0.0.0", port));
+
+	bool running = true;
+	bool connected = false;
+
+	ulong currentPayload = 10;
+	ubyte[] data = new ubyte[currentPayload];
+
+	while(running)
+	{
+		Socket client = server.accept();
+		client.blocking = true;
+
+		connected = true;
+
+		// Acknowledge client connection
+		client.send([ServerResponce.Ok, 0xFF, 0xFF, 0xFF, 0xFF]);
+
+		while(connected)
+		{
+			ptrdiff_t resp = client.receive(data);
+			if(resp == 0)
+			{
+				writeln("server closed");
+				connected = false;
+			}
+
+		}
+	}
+
+
 }
 
 int main()

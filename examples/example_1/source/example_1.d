@@ -3,7 +3,7 @@ module example_1;
 import std.stdio;
 import std.math;
 
-import rpp.rpc;
+import rpp.client.rpc;
 
 int main(char[][] args)
 {

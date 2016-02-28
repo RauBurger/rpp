@@ -533,25 +533,25 @@ void grid(string onOff)()
 }
 
 void contour(T, options...)(T[][] Z, options args)
-	if(isFloatingPoint!T && is(options[0] : string))
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
 {
 	contourImpl!(Function.Contour)(Z, args);
 }
 
 void contourf(T, options...)(T[][] Z, options args)
-	if(isFloatingPoint!T && is(options[0] : string))
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
 {
 	contourImpl!(Function.Contourf)(Z, args);
 }
 
 void contour3(T, options...)(T[][] Z, options args)
-	if(isFloatingPoint!T && is(options[0] : string))
+	if(isFloatingPoint!T && (is(options[0] : string)|| (options.length == 0)))
 {
 	contourImpl!(Function.Contour3)(Z, args);
 }
 
 private void contourImpl(Function func, T, options...)(T[][] Z, options args)
-	if(isFloatingPoint!T && is(options[0] : string))
+	if(isFloatingPoint!T && (is(options[0] : string) || (options.length == 0)))
 {
 	ubyte[] contourData;
 	contourData ~= Command.Data;

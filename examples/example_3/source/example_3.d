@@ -4,7 +4,7 @@ import std.stdio;
 import std.math;
 import std.mathspecial;
 
-import rpp.rpc;
+import rpp.client.rpc;
 
 int main(char[][] args)
 {
@@ -40,10 +40,6 @@ int main(char[][] args)
 	setupPlot("$x$", "$u$", ["line"], 12, "");
 	axis("square");
 	title("Some lines!");
-
-	real[][] Z = new real[][](cast(uint)abs(start), cast(uint)abs(end));
-	figure();
-	contour(Z);
 
 	return 0;
 }

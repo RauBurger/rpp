@@ -4,7 +4,7 @@ import std.stdio;
 import std.math;
 import std.mathspecial;
 
-import rpp.rpc;
+import rpp.client.rpc;
 
 int main(char[][] args)
 {

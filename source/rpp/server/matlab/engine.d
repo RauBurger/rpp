@@ -1,4 +1,6 @@
-import matrix;
+module rpp.server.matlab.engine;
+
+import rpp.server.matlab.matrix;
 
 extern (C):
 

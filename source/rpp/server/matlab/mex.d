@@ -1,4 +1,7 @@
-import matrix;
+module rpp.server.matlab.mex;
+
+import rpp.server.matlab.matrix;
+
 extern (C):
 
 alias impl_info_tag* MEX_impl_info;

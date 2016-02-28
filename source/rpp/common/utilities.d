@@ -1,9 +1,9 @@
-module rpp.util;
+module rpp.common.utilities;
 
 import std.traits;
 import std.stdio;
 
-package ubyte[T.sizeof] toUBytes(T)(T data)
+ubyte[T.sizeof] toUBytes(T)(T data)
 	if (isIntegral!T || isFloatingPoint!T)
 {
 	union conv
@@ -15,7 +15,7 @@ package ubyte[T.sizeof] toUBytes(T)(T data)
 	return tb.b;
 }
 
-package ubyte[] toUBytes(sizeT, T)(T[] data)
+ubyte[] toUBytes(sizeT, T)(T[] data)
 	if(isIntegral!T || isFloatingPoint!T)
 {
 	ubyte[] bytes;
@@ -26,7 +26,7 @@ package ubyte[] toUBytes(sizeT, T)(T[] data)
 	return bytes;
 }
 
-package ubyte[] toUBytes(sizeT, Tto, T)(T[][] data)
+ubyte[] toUBytes(sizeT, Tto, T)(T[][] data)
 	if(isIntegral!T || isFloatingPoint!T)
 {
 	ubyte[] bytes;
@@ -39,7 +39,7 @@ package ubyte[] toUBytes(sizeT, Tto, T)(T[][] data)
 	return bytes;
 }
 
-package ubyte[] toUBytes(T)(string str)
+ubyte[] toUBytes(T)(string str)
 {
 	static assert(isIntegral!T, "string length must be integral type");
 
@@ -50,7 +50,7 @@ package ubyte[] toUBytes(T)(string str)
 	return data;
 }
 
-package T get(T)(ubyte[] data) if(isIntegral!T || is(T : double) || is(T : float))
+T get(T)(ubyte[] data) if(isIntegral!T || is(T : double) || is(T : float))
 {
 	union conv
 	{
@@ -62,7 +62,7 @@ package T get(T)(ubyte[] data) if(isIntegral!T || is(T : double) || is(T : float
 	return tb.type;
 }
 
-package T get(T)(ubyte[] data, ref uint offset)
+T get(T)(ubyte[] data, ref uint offset)
 {
 	static assert(isIntegral!T || is(T : string) || is(T : double) || is(T : float), "Only integral types and strings supported");
 	static if(isIntegral!T || is(T : double) || is(T : float))

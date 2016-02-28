@@ -1,3 +1,5 @@
+module rpp.server.matlab.matrix;
+
 extern (C):
 
 alias mxArray_tag mxArray;

@@ -1,4 +1,4 @@
-module rpp.rpc;
+module rpp.client.rpc;
 
 import std.socket;
 import std.stdio;
@@ -7,7 +7,7 @@ import std.conv;
 import std.traits;
 import std.file;
 
-import rpp.util;
+import rpp.common.utilities;
 
 class PlotException : Exception
 {

@@ -1,17 +1,8 @@
 {
 	"name": "rpp",
-	"targetType": "library",
-	"sourcePaths": ["rpp"],
+	"sourcePaths": ["source"],
 	"copyright": "Copyright © 2016, Robert F. Rau II",
 	"authors": ["Rob Rau"],
-	"dependancies": {
-		"rpp:example_0": "*",
-		"rpp:example_1": "*",
-		"rpp:example_2": "*",
-		"rpp:example_3": "*",
-		"rpp:example_4": "*",
-		"rpp:example_5": "*"
-	},
 	"subPackages": [
 		"./examples/example_0",
 		"./examples/example_1",
@@ -20,10 +11,44 @@
 		"./examples/example_4",
 		"./examples/example_5"
 	],
-	"buildTypes": {
-		"debug": {
-			"buildOptions": ["debugMode", "debugInfo"],
-			"dflags": ["-fPIC"]
+	"configurations": [
+		{
+			"excludedSourceFiles": [
+				"source/rpp/server/*"
+			],
+			"name": "client",
+			"targetType": "library",
+			"buildTypes": {
+				"debug": {
+					"buildOptions": ["debugMode", "debugInfo"],
+					"dflags": ["-fPIC"]
+				}
+			}
+		},
+		{
+			"excludedSourceFiles": [
+				"source/rpp/client/*",
+				"source/package.d"
+			],
+			"targetName": "rpp-server",
+			"name": "server",
+			"targetType": "executable",
+			"mainSourceFile": "source/rpp/server/rps.d",
+			"buildTypes": {
+				"debug": {
+					"buildOptions": ["debugMode", "debugInfo"],
+				}
+			},
+			"lflags": ["\"-rpath=/home/rrau/MATLAB/R2015b/bin/glnxa64\"",
+					   "-L\"/home/rrau/MATLAB/R2015b/bin/glnxa64\"",
+					   "-lpthread",
+					   "-lmx",
+					   "-lmex",
+					   "-lmat",
+					   "-lm",
+					   "-lstdc++",
+					   "-leng"
+			]
 		}
-	}
+	]
 }

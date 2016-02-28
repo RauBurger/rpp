@@ -8,16 +8,15 @@ import numpy as np
 
 numTypes = {'uint16':'<H', 'int16':'<h', 'uint32':'<L', 'int32':'<l', 'single':'<I', 'uint64':'<Q', 'int64':'<q', 'double':'<d'}
 
-def Plot(data):
+def Plot(data, func, holdOn):
 	print(type(data))
 
 	fmt = data[1]
 	lines = data[2]
 
-	dataOffset = 3;
+	dataOffset = 3
 	for idx in range(lines):
 
-		#linelen, dataOffset = getNum('uinst32', data, dataOffset)
 		lineLen = int(int.from_bytes(data[dataOffset:dataOffset+4], 'little', signed=False)/8)
 		print("lineLen = "+str(lineLen))
 
@@ -27,12 +26,12 @@ def Plot(data):
 		y = []
 
 		for j in range(lineLen):
-			x.append(struct.unpack('<d', data[dataOffset:dataOffset+8])[0])
-			dataOffset += 8
+			(num, dataOffset) = getNum('double', data, dataOffset)
+			x.append(num)
 
 		for j in range(lineLen):
-			y.append(struct.unpack('<d', data[dataOffset:dataOffset+8])[0])
-			dataOffset += 8
+			(num, dataOffset) = getNum('double', data, dataOffset)
+			y.append(num)
 
 		fmtStr = ''
 		if fmt == 1:
@@ -46,15 +45,40 @@ def Plot(data):
 
 			plt.hold(True)
 
+			if func == enums.Function.Plot:
+					plt.plot(x, y, fmtStr);
+			elif func == enums.Function.Semilogx:
+					plt.semilogx(x, y, fmtStr);
+			elif func == enums.Function.Semilogy:
+					plt.semilogy(x, y, fmtStr);
+			elif func == enums.Function.Loglog:
+					plt.loglog(x, y, fmtStr);
+			else:
+				print("PANIC: (func != to plot || smilogx/y || loglog)")
+
+
 			plt.plot(x, y, fmtStr)
 			plt.show(block = False)
 		else:
 			plt.hold(True)
 
-			plt.plot(x, y)
+			if func == enums.Function.Plot:
+					plt.plot(x, y);
+			elif func == enums.Function.Semilogx:
+					plt.semilogx(x, y);
+			elif func == enums.Function.Semilogy:
+					plt.semilogy(x, y);
+			elif func == enums.Function.Loglog:
+					plt.loglog(x, y);
+			else:
+				print("PANIC: (func != to plot || smilogx/y || loglog)")
+
 			plt.show(block = False)
 
-	plt.hold(False)
+	if (not holdOn):
+		plt.hold(False)
+	else:
+		plt.hold(True)
 
 
 def Figure(data):
@@ -120,7 +144,7 @@ def serve():
 		elif currentCommand == enums.Command.Data: # data command
 			currentPayload = 1
 			if currentFunction == enums.Function.Plot: # plot function
-				Plot(data)
+				Plot(data, enums.Function.Plot, True)
 			elif currentFunction == enums.Function.Figure: # figure function
 				Figure(data)
 
@@ -129,9 +153,6 @@ def serve():
 
 		elif currentCommand == enums.Command.Close:
 			plt.show()
-		
-		a = getNum('uint32', data, 3)
-		print(a)
 
 
 if __name__ == '__main__':

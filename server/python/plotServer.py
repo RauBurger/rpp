@@ -54,10 +54,8 @@ def Plot(data, func, holdOn):
 			elif func == enums.Function.Loglog:
 					plt.loglog(x, y, fmtStr);
 			else:
-				print("PANIC: (func != to plot || smilogx/y || loglog)")
+				print("PANIC: (func not equal to plot || semilogx/y || loglog)")
 
-
-			plt.plot(x, y, fmtStr)
 			plt.show(block = False)
 		else:
 			plt.hold(True)
@@ -71,7 +69,7 @@ def Plot(data, func, holdOn):
 			elif func == enums.Function.Loglog:
 					plt.loglog(x, y);
 			else:
-				print("PANIC: (func != to plot || smilogx/y || loglog)")
+				print("PANIC: (func not equal to plot || semilogx/y || loglog)")
 
 			plt.show(block = False)
 
@@ -105,6 +103,7 @@ def serve():
 
 	print('Waiting for connection')
 
+	holdOn = False;
 	sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	sock.bind(('127.0.0.1', 54000))
 	sock.listen(0)
@@ -144,10 +143,22 @@ def serve():
 		elif currentCommand == enums.Command.Data: # data command
 			currentPayload = 1
 			if currentFunction == enums.Function.Plot: # plot function
-				Plot(data, enums.Function.Plot, True)
+				Plot(data, enums.Function.Plot, holdOn)
+			elif currentFunction == enums.Function.Semilogx:
+				Plot(data, enums.Function.Semilogx, holdOn)
+			elif currentFunction == enums.Function.Semilogy:
+				Plot(data, enums.Function.Semilogy, holdOn)
+			elif currentFunction == enums.Function.Loglog:
+				Plot(data, enums.Function.Loglog, holdOn)
 			elif currentFunction == enums.Function.Figure: # figure function
 				Figure(data)
-
+			elif currentFunction == enums.Function.Hold:
+				if(data[1] == 1):
+					plt.hold(True)
+					holdOn = True
+				elif(data[1] == 0):
+					plt.hold(False)
+					holdOn = False
 		elif currentCommand == enums.Command.Done:
 			currentPayload = 10
 

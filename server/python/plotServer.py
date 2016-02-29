@@ -17,10 +17,9 @@ def Plot(data, func, holdOn):
 	dataOffset = 3
 	for idx in range(lines):
 
-		lineLen = int(int.from_bytes(data[dataOffset:dataOffset+4], 'little', signed=False)/8)
+		(num, dataOffset) = getNum('uint32', data, dataOffset)
+		lineLen = int(num/8)
 		print("lineLen = "+str(lineLen))
-
-		dataOffset += 4
 
 		x = []
 		y = []

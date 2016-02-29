@@ -1,15 +1,19 @@
 module rpp.common.enums;
 
-enum Command : ubyte
+import std.variant;
+
+enum Command : byte
 {
+	None = -1,
 	Function = 0,
 	Data,
 	Done,
 	Close
 }
 
-enum Function : ubyte
+enum Function : byte
 {
+	None = -1,
 	Plot = 0,	// done
 	Figure,		// 1	done
 	SetupPlot,	// 2	done
@@ -39,3 +43,12 @@ enum ServerResponce : ubyte
 	Connected,
 	Disconnecting
 }
+
+Variant[string] options;
+/+
+interface IServerBackend
+{
+	void Plot();
+	void 
+}
++/

@@ -5,6 +5,7 @@ import std.math;
 import std.mathspecial;
 
 import rpp.client.rpc;
+import utilities;
 
 int main(char[][] args)
 {
@@ -14,13 +15,8 @@ int main(char[][] args)
 	real end = 12;
 	int points = 1000;
 
-	real h = (end-start)/(points-1);
-	real[] x = new real[points];
-	x[0] = start;
-
-	for(int i = 1; i < points; i++)
-		x[i] = x[i-1]+h;
-
+	real[] x = linspace(start, end, points);
+	
 	real[] u = new real[x.length];
 	real[] u1 = new real[x.length];
 

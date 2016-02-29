@@ -110,7 +110,7 @@ struct mlArray
 	}
 }
 
-extern (C) int RunMatlab()
+int RunMatlab()
 {
 	writeln("Hello matlab");
 	
@@ -186,19 +186,103 @@ void StartServer(ushort port)
 		// Acknowledge client connection
 		client.send([ServerResponce.Ok, 0xFF, 0xFF, 0xFF, 0xFF]);
 
+		Command currentCommand = Command.None;
+		Function currentFunction = Function.None;
+
 		while(connected)
 		{
 			ptrdiff_t resp = client.receive(data);
 			if(resp == 0)
 			{
-				writeln("server closed");
+				writeln("server closed, connection lost");
 				connected = false;
 			}
 
+			currentCommand = to!Command(data[0]);
+
+			switch(currentCommand)
+			{
+				case Command.Function:
+					currentFunction = to!Function(data[1]);
+					currentPayload = get!ulong(data[2..$]);
+					break;
+
+				case Command.Data:
+					switch(currentFunction)
+					{
+						case Function.Plot:
+							break;
+
+						case Function.Figure:
+							break;
+
+						case Function.SetupPlot:
+							break;
+
+						case Function.Print:
+							break;
+
+						case Function.Xlabel:
+							break;
+
+						case Function.Ylabel:
+							break;
+
+						case Function.Title:
+							break;
+
+						case Function.Subplot:
+							break;
+
+						case Function.Legend:
+							break;
+
+						case Function.Hold:
+							break;
+
+						case Function.Axis:
+							break;
+
+						case Function.Grid:
+							break;
+
+						case Function.Contour:
+							break;
+
+						case Function.Contourf:
+							break;
+
+						case Function.Contour3:
+							break;
+
+						case Function.Colorbar:
+							break;
+
+						case Function.Semilogx:
+							break;
+
+						case Function.Semilogy:
+							break;
+
+						case Function.Loglog:
+							break;
+
+						default:
+							break;
+					}
+					break;
+
+				case Command.Done:
+					break;
+
+				case Command.Close:
+					break;
+
+				default:
+					break;
+			}
 		}
 	}
-
-
 }
 
 int main()

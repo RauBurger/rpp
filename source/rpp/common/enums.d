@@ -43,12 +43,3 @@ enum ServerResponce : ubyte
 	Connected,
 	Disconnecting
 }
-
-Variant[string] options;
-/+
-interface IServerBackend
-{
-	void Plot();
-	void 
-}
-+/

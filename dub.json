@@ -9,7 +9,8 @@
 		"./examples/example_2",
 		"./examples/example_3",
 		"./examples/example_4",
-		"./examples/example_5"
+		"./examples/example_5",
+		"./source/rpp/server/plugins/matlab"
 	],
 	"configurations": [
 		{
@@ -28,6 +29,7 @@
 		{
 			"excludedSourceFiles": [
 				"source/rpp/client/*",
+				"source/rpp/server/plugins/*",
 				"source/package.d"
 			],
 			"targetName": "rpp-server",
@@ -39,16 +41,8 @@
 					"buildOptions": ["debugMode", "debugInfo"],
 				}
 			},
-			"lflags": ["\"-rpath=/home/rrau/MATLAB/R2015b/bin/glnxa64\"",
-					   "-L\"/home/rrau/MATLAB/R2015b/bin/glnxa64\"",
-					   "-lpthread",
-					   "-lmx",
-					   "-lmex",
-					   "-lmat",
-					   "-lm",
-					   "-lstdc++",
-					   "-leng"
-			]
+			"dflags": ["-defaultlib=libphobos2.so"],
+			"lflags": ["-ldl"]
 		}
 	]
 }

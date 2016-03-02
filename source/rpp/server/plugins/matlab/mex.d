@@ -1,6 +1,6 @@
-module rpp.server.matlab.mex;
+module matlab.mex;
 
-import rpp.server.matlab.matrix;
+import matlab.matrix;
 
 extern (C):
 

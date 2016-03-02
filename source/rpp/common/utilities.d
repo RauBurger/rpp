@@ -1,5 +1,6 @@
 module rpp.common.utilities;
 
+import std.conv;
 import std.traits;
 import std.stdio;
 
@@ -45,12 +46,13 @@ ubyte[] toUBytes(T)(string str)
 
 	assert(str.length < T.max, "string to large for size type");
 	ubyte[] data;
-	data ~= toUBytes!T(cast(T)str.length);
+	data ~= toUBytes!T(to!T(str.length));
 	data ~= str[];
 	return data;
 }
 
-T get(T)(ubyte[] data) if(isIntegral!T || is(T : double) || is(T : float))
+T get(T)(ubyte[] data)
+	if(isIntegral!T || is(T : double) || is(T : float))
 {
 	union conv
 	{
@@ -63,21 +65,20 @@ T get(T)(ubyte[] data) if(isIntegral!T || is(T : double) || is(T : float))
 }
 
 T get(T)(ubyte[] data, ref uint offset)
+	if(isIntegral!T || is(T : double) || is(T : float))
 {
-	static assert(isIntegral!T || is(T : string) || is(T : double) || is(T : float), "Only integral types and strings supported");
-	static if(isIntegral!T || is(T : double) || is(T : float))
-	{
-		offset += T.sizeof;
-		return get!T(data[offset-T.sizeof..offset]);
-	}
-	else static if(is(T : string))
-	{
-		uint strSize = get!uint(data, offset);
-		string str = "";
-		foreach(el; data[offset..offset+strSize])
-			str ~= el;
+	offset += T.sizeof;
+	return get!T(data[offset-T.sizeof..offset]);
+}
 
-		offset += strSize;
-		return str;
-	}
+T get(T, sizeT)(ubyte[] data, ref uint offset)
+	if(is(T : string))
+{
+	sizeT strSize = get!sizeT(data, offset);
+	string str = "";
+	foreach(el; data[offset..offset+strSize])
+		str ~= el;
+
+	offset += strSize;
+	return str;
 }

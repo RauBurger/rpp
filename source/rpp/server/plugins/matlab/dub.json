@@ -1,0 +1,24 @@
+{
+	"name": "matlabBackend",
+	"targetType": "dynamicLibrary",
+	"targetPath": "../../../../../plugins",
+	"targetName": "matlabBackend",
+	"buildTypes": {
+		"debug": {
+			"buildOptions": ["debugMode", "debugInfo"],
+			"dflags": ["-fPIC"]
+		}
+	},
+	"sourcePaths": ["./"],
+	"importPaths": ["../../../../../source"],
+	"lflags": ["\"-rpath=/home/rrau/MATLAB/R2015b/bin/glnxa64\"",
+			   "-L\"/home/rrau/MATLAB/R2015b/bin/glnxa64\"",
+			   "-lpthread",
+			   "-lmx",
+			   "-lmex",
+			   "-lmat",
+			   "-lm",
+			   "-lstdc++",
+			   "-leng"
+	]
+}

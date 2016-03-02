@@ -6,6 +6,7 @@ import std.meta;
 import std.conv;
 import std.traits;
 import std.file;
+import std.exception : assumeUnique;
 
 import rpp.common.utilities;
 import rpp.common.enums;
@@ -273,13 +274,9 @@ void print(string format)(string path)
 
 	ubyte[] printData;
 	printData ~= Command.Data;
-	printData ~= toUBytes!ushort(cast(ushort)newPath.length);
+	printData ~= toUBytes!ushort(newPath);
 
-	printData ~= newPath[];
-
-	printData ~= cast(ubyte)format.length;
-
-	printData ~= format[];
+	printData ~= toUBytes!ubyte(format);
 
 	SendFunctionCommand!(Function.Print)(printData.length);
 	SendData(printData);
@@ -695,6 +692,30 @@ private void contourImpl(Function func, T, options...)(T[][] X, T[][] Y, T[][] Z
 	SendDoneCommand();
 }
 
+void colorbar()
+{
+
+}
+
+void colorbar(string placement)
+{
+
+}
+
+void colorbar(Nvp...)(Nvp nvp)
+	if ((Nvp.length == 2) && is(Nvp[0]: string) &&
+		(isIntegral!(AliasSeq!(Nvp)[1]) || isFloatingPoint!(AliasSeq!(Nvp)[1]) || is(Nvp[1]: string)))
+{
+
+}
+
+void colorbar(Nvp...)(string placement, Nvp nvp)
+	if ((Nvp.length == 2) && is(Nvp[0]: string) &&
+		(isIntegral!(AliasSeq!(Nvp)[1]) || isFloatingPoint!(AliasSeq!(Nvp)[1]) || is(Nvp[1]: string)))
+{
+
+}
+
 private void SendData(ubyte[] data)
 {
 	ptrdiff_t sentBytes = server.sendTo(data, serverAddr);
@@ -720,16 +741,16 @@ private void ThrowPlotException(ubyte[5] requestData)
 
 	ptrdiff_t rcvBytes = server.receiveFrom(data, serverAddr);
 
-	string id = get!string(data, offset);
-	string msg = get!string(data, offset);
+	string id = get!(string, uint)(data, offset);
+	string msg = get!(string, uint)(data, offset);
 
 	uint stackSize = get!uint(data, offset);
 	PlotException.ExceptionStack[] stack = new PlotException.ExceptionStack[stackSize];
 
 	foreach(ref stackItem; stack)
 	{
-		stackItem.file = get!string(data, offset);
-		stackItem.name = get!string(data, offset);
+		stackItem.file = get!(string, uint)(data, offset);
+		stackItem.name = get!(string, uint)(data, offset);
 		stackItem.line = get!uint(data, offset);
 	}
 

@@ -1,159 +1,17 @@
 module rpp.server.rps;
 
-import std.stdio;
-import std.traits;
+import std.concurrency;
 import std.conv;
 import std.socket;
+import std.stdio;
+import std.traits;
 
-import rpp.server.matlab.engine;
-import rpp.server.matlab.matrix;
-import rpp.server.matlab.mex;
+import core.time;
+
 import rpp.common.utilities;
 import rpp.common.enums;
-
-double[] linspace(double start, double end, int points)
-{
-	double h = (end-start)/(points-1);
-	double[] x = new double[points];
-	x[0] = start;
-	for(int i = 1; i < points; i++)
-	{
-		x[i] = x[i-1]+h;
-	}
-	return x;
-}
-
-struct mlArray
-{
-	private double* data;
-	mxArray* matlabData;
-	ulong length;
-
-	alias matlabData this;
-
-	this(ulong length)
-	{
-		matlabData = mxCreateDoubleMatrix(1, length, mxComplexity.mxREAL);
-		
-		data = mxGetPr(matlabData);
-	}
-
-	this(double initdata, ulong length)
-	{
-		this.length = length;
-		matlabData = mxCreateDoubleMatrix(1, length, mxComplexity.mxREAL);
-		
-		data = mxGetPr(matlabData);
-		data[0..length] = initdata;
-	}
-
-	this(double[] initdata)
-	{		
-		length = initdata.length;
-		matlabData = mxCreateDoubleMatrix(1, initdata.length, mxComplexity.mxREAL);
-		
-		data = mxGetPr(matlabData);
-		data[0..length] = initdata[];
-	}
-
-	~this()
-	{
-		mxDestroyArray(matlabData);
-	}
-
-	ref double opIndex(ulong idx)
-	{
-		writeln("in opIndex 1");
-		return data[idx];
-	}
-
-	double[] opIndex(ulong idx1, ulong idx2)
-	{
-		writeln("in opIndex 2");
-		return data[idx1..idx2];
-	}
-
-	double[] opIndex(ulong[2] idx1)
-	{
-		writeln("in opIndex 2");
-		return data[idx1[0]..idx1[1]];
-	}
-
-	double[] opSlice(ulong start, ulong end)
-	{
-		writeln("In opSlice");
-		return data[start..end];
-	}
-
-	int opApply(int delegate(int idx, ref double) dg)
-	{
-		int result = 0;
-		for(int i = 0; i < length; i++)
-		{
-			result = dg(i, data[i]);
-			if(result)
-				break;
-		}
-		return result;
-	}
-
-	int opApply(int delegate(ref double) dg)
-	{
-		int result = 0;
-		for(int i = 0; i < length; i++)
-		{
-			result = dg(data[i]);
-			if(result)
-				break;
-		}
-		return result;
-	}
-}
-
-int RunMatlab()
-{
-	writeln("Hello matlab");
-	
-	Engine* engine = engOpen("");
-
-	if(engine == null)
-	{
-		writeln("Engine failed to open");
-		return -1;
-	}
-
-	mlArray arr = mlArray(linspace(0, 10, 100));
-
-	writeln("Copied array, off to matlab");
-	engPutVariable(engine, "T", arr);
-
-	writeln("making thing");
-	engEvalString(engine, "D = T.^2;");
-	writeln("plotting");
-	engEvalString(engine, "hlines = plot(T, D);");
-	engEvalString(engine, `setupPlot(hlines, '$T$', '$Y$', {'line'}, 12, 'northwest');`);
-
-	writeln("Press return");
-	readln();
-
-	foreach(int i, ref el; arr)
-		el = to!double(i);
-
-	engPutVariable(engine, "T", arr);
-
-	engEvalString(engine, "figure;");
-	engEvalString(engine, `hlines = plot(D, T, 'r', D, -T, 'g');`);
-	engEvalString(engine, `setupPlot(hlines, '$D$', '$T$', {'line1', 'line2'}, 12, 'northwest');`);
-
-	writeln("Press return to exit");
-	readln();
-
-	engClose(engine);
-	writeln("Goodbye");
-
-	return 0;
-}
-
+import rpp.server.backend;
+/+
 Socket server;
 
 static ~this()
@@ -163,12 +21,12 @@ static ~this()
 		server.close();
 	}
 }
-
-void StartServer(ushort port)
++/
+void server(ushort port)
 {
-	server = new TcpSocket(AddressFamily.INET);
-	server.blocking = true;
-	server.bind(new InternetAddress("0.0.0.0", port));
+	auto server = new TcpSocket(AddressFamily.INET);
+	server.blocking = false;
+	server.bind(new InternetAddress(port));
 
 	bool running = true;
 	bool connected = false;
@@ -176,9 +34,19 @@ void StartServer(ushort port)
 	ulong currentPayload = 10;
 	ubyte[] data = new ubyte[currentPayload];
 
+	server.listen(1);
+
 	while(running)
 	{
-		Socket client = server.accept();
+		Socket client;
+
+		writeln("Waiting for connection");
+		while((client is null) && running)
+		{
+			client = server.accept();
+			receiveTimeout(dur!"msecs"(-1), (bool run){ running = run;});	
+		}
+		writeln("Got connection");
 		client.blocking = true;
 
 		connected = true;
@@ -189,8 +57,10 @@ void StartServer(ushort port)
 		Command currentCommand = Command.None;
 		Function currentFunction = Function.None;
 
-		while(connected)
+		while(connected && running)
 		{
+			receiveTimeout(dur!"msecs"(-1), (bool run){ running = run;});
+
 			ptrdiff_t resp = client.receive(data);
 			if(resp == 0)
 			{
@@ -211,60 +81,93 @@ void StartServer(ushort port)
 					switch(currentFunction)
 					{
 						case Function.Plot:
+							Backend.Plot!(Function.Plot)(data);
 							break;
 
 						case Function.Figure:
+							Backend.Figure(data);
 							break;
 
 						case Function.SetupPlot:
+							Backend.SetupPlot(data);
 							break;
 
 						case Function.Print:
+							Backend.Print(data);
 							break;
 
 						case Function.Xlabel:
+							Backend.TextLabel!(Function.Xlabel)(data);
 							break;
 
 						case Function.Ylabel:
+							Backend.TextLabel!(Function.Ylabel)(data);
 							break;
 
 						case Function.Title:
+							Backend.TextLabel!(Function.Title)(data);
 							break;
 
 						case Function.Subplot:
+							Backend.Subplot(data);
 							break;
 
 						case Function.Legend:
+							Backend.Legend(data);
 							break;
 
 						case Function.Hold:
+							if(data[1] == 0)
+							{
+								Backend.Hold(false);
+							}
+							else if(data[1] == 1)
+							{
+								Backend.Hold(false);
+							}
 							break;
 
 						case Function.Axis:
+							Backend.Axis(data);
 							break;
 
 						case Function.Grid:
+							if(data[1] == 0)
+							{
+								Backend.Grid(false);
+							}
+							else if(data[1] == 1)
+							{
+								Backend.Grid(false);
+							}
 							break;
 
 						case Function.Contour:
+							Backend.Contour!(Function.Contour)(data);
 							break;
 
 						case Function.Contourf:
+							Backend.Contour!(Function.Contourf)(data);
 							break;
 
 						case Function.Contour3:
+							Backend.Contour!(Function.Contour3)(data);
 							break;
 
 						case Function.Colorbar:
+							Backend.Colorbar(data);
 							break;
 
 						case Function.Semilogx:
+							Backend.Plot!(Function.Semilogx)(data);
 							break;
 
 						case Function.Semilogy:
+							Backend.Plot!(Function.Semilogy)(data);
 							break;
 
 						case Function.Loglog:
+							Backend.Plot!(Function.Loglog)(data);
 							break;
 
 						default:
@@ -283,9 +186,27 @@ void StartServer(ushort port)
 			}
 		}
 	}
+
+	writeln("closing server");
+	server.close();
 }
 
 int main()
 {
-	return RunMatlab();
+	writeln("Initializing plotting backend");
+	Backend.LoadBackend("plugins/libmatlabBackend.so");
+
+	Backend.Plot!(Function.Plot)(null);
+	
+	writeln("Spawning server");
+	auto serverTid = spawn(&server, cast(ushort)54000);
+
+	writeln("Press enter to exit...heh");
+	readln();
+
+	writeln("Stopping server");
+	send(serverTid, false);
+
+	return 0;
+	//return RunMatlab();
 }

@@ -25,6 +25,6 @@ int main(char[][] args)
 
 	figure;
 	contourf(grid.X, grid.Y, Z, 100, "LineStyle", "none");
-
+	colorbar(`southside`, `Direction`, `reverse`);
 	return 0;
 }

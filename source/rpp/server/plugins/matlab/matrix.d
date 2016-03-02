@@ -1,4 +1,4 @@
-module rpp.server.matlab.matrix;
+module matlab.matrix;
 
 extern (C):
 

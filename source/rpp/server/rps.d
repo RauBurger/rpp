@@ -24,9 +24,13 @@ static ~this()
 +/
 void server(ushort port)
 {
-	auto server = new TcpSocket(AddressFamily.INET);
-	server.blocking = false;
-	server.bind(new InternetAddress(port));
+	writeln("Initializing plotting backend");
+	Backend.LoadBackend("plugins/libmatlabBackend.so");
+	//auto server = new TcpSocket(AddressFamily.INET);
+	auto server = new Socket(AddressFamily.INET, SocketType.STREAM);
+	//server.blocking = false;
+	//server.bind(new InternetAddress("0.0.0.0", port));
+	server.bind(new InternetAddress("localhost", port));
 
 	bool running = true;
 	bool connected = false;
@@ -36,16 +40,28 @@ void server(ushort port)
 
 	server.listen(1);
 
+	SocketSet readSet = new SocketSet;
+
 	while(running)
 	{
 		Socket client;
 
+		readSet.reset();
+		readSet.add(server);
+
+		int selectResp = 0;
 		writeln("Waiting for connection");
-		while((client is null) && running)
+		while((0 == server.select(readSet, null, null)) && running)
 		{
-			client = server.accept();
-			receiveTimeout(dur!"msecs"(-1), (bool run){ running = run;});	
+			receiveTimeout(dur!"msecs"(10), (bool run){ running = run;});
 		}
+
+		if(!running)
+		{
+			break;
+		}
+
+		client = server.accept();
 		writeln("Got connection");
 		client.blocking = true;
 
@@ -59,15 +75,17 @@ void server(ushort port)
 
 		while(connected && running)
 		{
-			receiveTimeout(dur!"msecs"(-1), (bool run){ running = run;});
+			//receiveTimeout(dur!"msecs"(-1), (bool run){ running = run;});
 
+			data.length = currentPayload;
 			ptrdiff_t resp = client.receive(data);
 			if(resp == 0)
 			{
-				writeln("server closed, connection lost");
+				writeln("client closed, connection lost");
 				connected = false;
 			}
 
+			client.send(cast(ubyte[])[0]~toUBytes(to!uint(resp)));
 			currentCommand = to!Command(data[0]);
 
 			switch(currentCommand)
@@ -173,12 +191,18 @@ void server(ushort port)
 						default:
 							break;
 					}
+					currentPayload = 1;
 					break;
 
 				case Command.Done:
+					currentPayload = 10;
 					break;
 
 				case Command.Close:
+					writeln("closing connection");
+					client.send([0, 4, 255, 89, 255]);
+					client.close();
+					connected = false;
 					break;
 
 				default:
@@ -193,20 +217,14 @@ void server(ushort port)
 
 int main()
 {
-	writeln("Initializing plotting backend");
-	Backend.LoadBackend("plugins/libmatlabBackend.so");
-
-	Backend.Plot!(Function.Plot)(null);
-	
 	writeln("Spawning server");
-	auto serverTid = spawn(&server, cast(ushort)54000);
+	
+	Tid thread = spawn({ server(54000); });
 
 	writeln("Press enter to exit...heh");
 	readln();
 
+	send(thread, false);
 	writeln("Stopping server");
-	send(serverTid, false);
-
 	return 0;
-	//return RunMatlab();
 }

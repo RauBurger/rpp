@@ -39,7 +39,7 @@ interface IServerBackend
 	void Legend(string[] lines);
 	void Legend(string[] lines, Options options);
 	void Hold(bool on);
-	void Axis(int[] limits);
+	void Axis(long[] limits);
 	void Axis(string option);
 	void Grid(bool on);
 	void Contour(double[][] Z);
@@ -171,49 +171,13 @@ struct Backend
 			}
 		}
 
-		static if(func == Function.Plot)
+		if(plotFormat)
 		{
-			if(plotFormat)
-			{
-				backend.Plot(X, Y, formats);
-			}
-			else
-			{
-				backend.Plot(X, Y);
-			}
+			mixin("backend."~to!string(func)~"(X, Y, formats);");
 		}
-		else static if(func == Function.Semilogx)
+		else
 		{
-			if(plotFormat)
-			{
-				backend.Semilogx(X, Y, formats);
-			}
-			else
-			{
-				backend.Semilogx(X, Y);
-			}
-		}
-		else static if(func == Function.Semilogx)
-		{
-			if(plotFormat)
-			{
-				backend.Semilogy(X, Y, formats);
-			}
-			else
-			{
-				backend.Semilogy(X, Y);
-			}
-		}
-		else static if(func == Function.Semilogx)
-		{
-			if(plotFormat)
-			{
-				backend.Loglog(X, Y, formats);
-			}
-			else
-			{
-				backend.Loglog(X, Y);
-			}
+			mixin("backend."~to!string(func)~"(X, Y);");
 		}
 	}
 
@@ -224,7 +188,7 @@ struct Backend
 
 		Options options;
 		
-		foreach(i; 0..numOptions)
+		foreach(i; 0..numOptions-1)
 		{
 			string option = get!(string, ushort)(data, offset);
 
@@ -307,69 +271,255 @@ struct Backend
 
 		Options options = bytesToOptions(data, offset);
 
-		static if(func == Function.Xlabel)
+		if(options.length > 0)
 		{
-			if(options.length > 0)
-			{
-				backend.Xlabel(label, options);
-			}
-			else
-			{
-				backend.Xlabel(label);
-			}
+			mixin("backend."~to!string(func)~"(label, options);");
 		}
-		else static if(func == Function.Ylabel)
+		else
 		{
-			if(options.length > 0)
-			{
-				backend.Ylabel(label, options);
-			}
-			else
-			{
-				backend.Ylabel(label);
-			}
-		}
-		else static if(func == Function.Title)
-		{
-			if(options.length > 0)
-			{
-				backend.Title(label, options);
-			}
-			else
-			{
-				backend.Title(label);
-			}
+			mixin("backend."~to!string(func)~"(label);");
 		}
 	}
 
 	static void Subplot(ubyte[] data)
 	{
+		uint offset = 1;
 
+		ubyte m = data[offset];
+		offset++;
+		ubyte n = data[offset];
+		offset++;
+		ubyte p = data[offset];
+		offset++;
+
+		string option = get!(string, ubyte)(data, offset);
+		Options options = bytesToOptions(data, offset);
+
+		if((option.length == 0) && (options.length == 0))
+		{
+			backend.Subplot(m, n, p);
+		}
+		else if((option.length == 0) && (options.length != 0))
+		{
+			backend.Subplot(m, n, p, options);
+		}
+		else if((option.length != 0) && (options.length == 0))
+		{
+			backend.Subplot(m, n, p, option);
+		}
+		else
+		{
+			backend.Subplot(m, n, p, option, options);
+		}
 	}
 
 	static void Legend(ubyte[] data)
 	{
+		uint offset = 1;
 
+		ubyte numLines = data[offset];
+		offset++;
+
+		string[] lines = new string[numLines];
+
+		foreach(ref line; lines)
+		{
+			line = get!(string, ushort)(data, offset);
+		}
+
+		Options options = bytesToOptions(data, offset);
+
+		if(options.length == 0)
+		{
+			backend.Legend(lines);
+		}
+		else
+		{
+			backend.Legend(lines, options);
+		}
 	}
 
 	static void Hold(bool on)
 	{
-
+		backend.Hold(on);
 	}
 
 	static void Axis(ubyte[] data)
 	{
+		uint offset = 1;
 
+		ubyte funcType = data[offset];
+		offset++;
+
+		if(funcType == 0)
+		{
+			// string argument
+			string option = get!(string, ubyte)(data, offset);
+			backend.Axis(option);
+		}
+		else if(funcType == 1)
+		{
+			// array argument
+			long[] limits = new long[4];
+
+			limits[0] = get!long(data, offset);
+			limits[1] = get!long(data, offset);
+			limits[2] = get!long(data, offset);
+			limits[3] = get!long(data, offset);
+
+			backend.Axis(limits);
+		}
 	}
 
 	static void Grid(bool on)
 	{
-
+		backend.Grid(on);
 	}
 
 	static void Contour(Function func)(ubyte[] data)
 	{
 
+		uint offset = 1;
+		ubyte funcType = data[offset];
+		offset++;
+
+		switch(funcType)
+		{
+			case 0:
+				ContourImpl0!(func)(data, offset);
+				break;
+
+			case 1:
+				ContourImpl1!(func)(data, offset);
+				break;
+
+			case 2:
+				ContourImpl2!(func)(data, offset);
+				break;
+
+			case 3:
+				ContourImpl3!(func)(data, offset);
+				break;
+
+			case 4:
+				ContourImpl4!(func)(data, offset);
+				break;
+
+			case 5:
+				ContourImpl5!(func)(data, offset);
+				break;
+
+			default:
+				break;
+		}
+	}
+
+	static void ContourImpl0(Function func)(ubyte[] data, uint offset)
+	{
+		double[][] Z = get!(double[][], uint)(data, offset);
+
+		Options options = bytesToOptions(data, offset);
+
+		if(options.length == 0)
+		{
+			mixin("backend."~to!string(func)~"(Z);");
+		}
+		else
+		{
+			mixin("backend."~to!string(func)~"(Z, options);");
+		}
+	}
+
+	static void ContourImpl1(Function func)(ubyte[] data, uint offset)
+	{
+		double[][] Z = get!(double[][], uint)(data, offset);
+		uint n = get!uint(data, offset);
+
+		Options options = bytesToOptions(data, offset);
+
+		if(options.length == 0)
+		{
+			mixin("backend."~to!string(func)~"(Z, n);");
+		}
+		else
+		{
+			mixin("backend."~to!string(func)~"(Z, n, options);");
+		}
+	}
+
+	static void ContourImpl2(Function func)(ubyte[] data, uint offset)
+	{
+		double[][] Z = get!(double[][], uint)(data, offset);
+		uint[] v = get!(uint[], uint)(data, offset);
+
+		Options options = bytesToOptions(data, offset);
+
+		if(options.length == 0)
+		{
+			mixin("backend."~to!string(func)~"(Z, v);");
+		}
+		else
+		{
+			mixin("backend."~to!string(func)~"(Z, v, options);");
+		}
+	}
+
+	static void ContourImpl3(Function func)(ubyte[] data, uint offset)
+	{
+		double[][] X = get!(double[][], uint)(data, offset);
+		double[][] Y = get!(double[][], uint)(data, offset);
+		double[][] Z = get!(double[][], uint)(data, offset);
+
+		Options options = bytesToOptions(data, offset);
+
+		if(options.length == 0)
+		{
+			mixin("backend."~to!string(func)~"(X, Y, Z);");
+		}
+		else
+		{
+			mixin("backend."~to!string(func)~"(X, Y, Z, options);");
+		}
+	}
+
+	static void ContourImpl4(Function func)(ubyte[] data, uint offset)
+	{
+		double[][] X = get!(double[][], uint)(data, offset);
+		double[][] Y = get!(double[][], uint)(data, offset);
+		double[][] Z = get!(double[][], uint)(data, offset);
+
+		uint n = get!uint(data, offset);
+
+		Options options = bytesToOptions(data, offset);
+
+		if(options.length == 0)
+		{
+			mixin("backend."~to!string(func)~"(X, Y, Z, n);");
+		}
+		else
+		{
+			mixin("backend."~to!string(func)~"(X, Y, Z, n, options);");
+		}
+	}
+
+	static void ContourImpl5(Function func)(ubyte[] data, uint offset)
+	{
+		double[][] X = get!(double[][], uint)(data, offset);
+		double[][] Y = get!(double[][], uint)(data, offset);
+		double[][] Z = get!(double[][], uint)(data, offset);
+
+		uint[] v = get!(uint[], uint)(data, offset);
+
+		Options options = bytesToOptions(data, offset);
+
+		if(options.length == 0)
+		{
+			mixin("backend."~to!string(func)~"(X, Y, Z, v);");
+		}
+		else
+		{
+			mixin("backend."~to!string(func)~"(X, Y, Z, v, options);");
+		}
 	}
 
 	static void Colorbar(ubyte[] data)

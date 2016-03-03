@@ -53,16 +53,21 @@ void initRPP(string remoteAddr, ushort port)
 {
 	writeln("trying to connect to server");
 	
-	server = new TcpSocket(AddressFamily.INET);
+	//server = new TcpSocket(AddressFamily.INET);
+	server = new Socket(AddressFamily.INET, SocketType.STREAM);
 	server.blocking = true;
-	server.setOption(SocketOptionLevel.TCP, SocketOption.TCP_NODELAY, 1);
+	//server.setOption(SocketOptionLevel.TCP, SocketOption.TCP_NODELAY, 1);
 	
+	//serverAddr = new InternetAddress(to!(const(char[]))(remoteAddr), port);
+	//serverAddr = new InternetAddress("localhost", port);
+	server.connect(new InternetAddress("localhost", port));
 	writeln("connected to server... I think");
-	serverAddr = new InternetAddress(to!(const(char[]))(remoteAddr), port);
-	server.connect(serverAddr);
-	
+
+	//server.send([0]);
 	ubyte[5] respData;
 	long rcvBytes = server.receiveFrom(respData, serverAddr);
+	writeln("got bytes");
+
 	if(respData[0] == 3)
 		ThrowPlotException(respData);
 
@@ -435,7 +440,9 @@ void legend(options...)(string[] lines, options args)
 	legendData ~= cast(ubyte)lines.length;
 
 	foreach(line; lines)
+	{
 		legendData ~= toUBytes!ushort(line);
+	}
 
 	legendData ~= optionsToUbytes(args);
 

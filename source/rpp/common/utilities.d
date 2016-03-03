@@ -1,6 +1,7 @@
 module rpp.common.utilities;
 
 import std.conv;
+import std.meta;
 import std.traits;
 import std.stdio;
 
@@ -27,15 +28,15 @@ ubyte[] toUBytes(sizeT, T)(T[] data)
 	return bytes;
 }
 
-ubyte[] toUBytes(sizeT, Tto, T)(T[][] data)
+ubyte[] toUBytes(sizeT, toT, T)(T[][] data)
 	if(isIntegral!T || isFloatingPoint!T)
 {
 	ubyte[] bytes;
-	bytes ~= toUBytes!sizeT(cast(sizeT)(data.length*Tto.sizeof));
-	bytes ~= toUBytes!sizeT(cast(sizeT)(data[0].length*Tto.sizeof));
+	bytes ~= toUBytes!sizeT(cast(sizeT)(data.length*toT.sizeof));
+	bytes ~= toUBytes!sizeT(cast(sizeT)(data[0].length*toT.sizeof));
 	foreach(slice; data)
 		foreach(el; slice)
-			bytes ~= toUBytes!Tto(el);
+			bytes ~= toUBytes!toT(el);
 
 	return bytes;
 }
@@ -72,13 +73,49 @@ T get(T)(ubyte[] data, ref uint offset)
 }
 
 T get(T, sizeT)(ubyte[] data, ref uint offset)
-	if(is(T : string))
+	if(is(T : string) || isArray!T)
 {
-	sizeT strSize = get!sizeT(data, offset);
-	string str = "";
-	foreach(el; data[offset..offset+strSize])
-		str ~= el;
+	static if(is(T: string))
+	{
+		sizeT strSize = get!sizeT(data, offset);
+		string str = "";
+		foreach(el; data[offset..offset+strSize])
+			str ~= el;
 
-	offset += strSize;
-	return str;
+		offset += strSize;
+		return str;
+	}
+	else static if(!isArray!(ForeachType!T))
+	{
+		sizeT dim = get!sizeT(data, offset);
+
+		T arr = new T(dim);
+
+		foreach(ref el; arr)
+		{
+			el = get!(ForeachType!T)(data, offset);
+		}
+		return arr;
+	}
+	else static if(isArray!(ForeachType!T) && !isArray!(ForeachType!(ForeachType!T)))
+	{
+		sizeT dim1 = get!sizeT(data, offset);
+		sizeT dim2 = get!sizeT(data, offset);
+
+		T arr = new T(dim1, dim2);
+
+		foreach(ref subarr; arr)
+		{
+			foreach(ref el; subarr)
+			{
+				el = get!(ForeachType!(ForeachType!T))(data, offset);
+			}
+		}
+
+		return arr;
+	}	
+	else
+	{
+		static assert(0, "Not implimented");
+	}
 }

@@ -24,7 +24,7 @@ interface IServerBackend
 	void Plot(double[][] X, double[][] Y, string[] fmts);
 	void Figure();
 	void Figure(Options options);
-	void SetupPlot(string xlabel, string ylabel, string[] legendNames, ubyte fontSize, string legenLoc);
+	void SetupPlot(string xlabel, string ylabel, string[] legendNames, ubyte fontSize, string legendLoc);
 	void Print(string format, string path);
 	void Xlabel(string label);
 	void Xlabel(string label, Options options);

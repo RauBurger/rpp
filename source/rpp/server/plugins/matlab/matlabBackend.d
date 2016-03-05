@@ -35,7 +35,8 @@ class MatlabBackend : IServerBackend
 
 	this()
 	{	
-		engine = engOpen("");
+		engine = engOpen("matlab -nosplash");
+		//engine = engOpen("");
 
 		if(engine == null)
 		{
@@ -50,12 +51,13 @@ class MatlabBackend : IServerBackend
 	
 	void Plot(double[][] X, double[][] Y)
 	{
+		"plot1".writeln;
 		string command = `hlines = plot(`;
 
 		foreach(ulong i; 0..X.length)
 		{
-			mlArray x = mlArray(X[i]);
-			mlArray y = mlArray(Y[i]);
+			auto x = mlArray!double(X[i]);
+			auto y = mlArray!double(Y[i]);
 
 			string xStr = "X"~i.to!string;
 			string yStr = "Y"~i.to!string;
@@ -73,12 +75,13 @@ class MatlabBackend : IServerBackend
 	
 	void Plot(double[][] X, double[][] Y, string[] fmts)
 	{
+		"plot2".writeln;
 		string command = `hlines = plot(`;
 
 		foreach(ulong i; 0..X.length)
 		{
-			mlArray x = mlArray(X[i]);
-			mlArray y = mlArray(Y[i]);
+			auto x = mlArray!double(X[i]);
+			auto y = mlArray!double(Y[i]);
 
 			string xStr = "X"~i.to!string;
 			string yStr = "Y"~i.to!string;
@@ -91,24 +94,34 @@ class MatlabBackend : IServerBackend
 
 		command = command.chomp(", ") ~ ");";
 
+		writeln("Plot2 eval");
 		engEvalString(engine, command.toStringz);
 	}
 	
 	void Figure()
 	{
+		"figure1".writeln;
 		engEvalString(engine, "figure;");
-		//writeln("Figure1");
 	}
 
 	void Figure(Options options)
 	{
-
 		writeln("Figure2");
 	}
 
-	void SetupPlot(string xlabel, string ylabel, string[] legendNames, ubyte fontSize, string legenLoc)
+	void SetupPlot(string xlabel, string ylabel, string[] legendNames, ubyte fontSize, string legendLoc)
 	{
-		writeln("SetupPlot");
+		string command = `setupPlot(hlines, '`~xlabel~`', '`~ylabel~`', {'`;
+
+		foreach(immutable name; legendNames)
+		{
+			command ~= name ~ `','`;
+		}
+
+		command = command.chomp(`,'`) ~ `},`~fontSize.to!string~`,'`~legendLoc~`');`;
+		command.writeln;
+
+		engEvalString(engine, command.toStringz);
 	}
 
 	void Print(string format, string path)

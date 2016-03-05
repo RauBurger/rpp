@@ -2,6 +2,7 @@ module matlab.mlArray;
 
 import std.experimental.allocator.mallocator;
 import std.stdio;
+import std.traits;
 
 import matlab.mex;
 import matlab.matrix;
@@ -14,48 +15,81 @@ import matlab.matrix;
 	return p ? p[0..bytes] : null;
 }
 
-struct mlArray
+struct mlArray(T)
+	if((is(T: double) && !isArray!T) ||
+		is(T: string))
 {
-	double[] data;
+	static if(!is(T: string))
+	{
+		T[] data;
+	}
+	else
+	{
+		T data;
+	}
+
 	mxArray* matlabData;
 
 	alias data this;
 
 	@nogc this(ulong length)
 	{
-		matlabData = mxCreateDoubleMatrix(0, 0, mxComplexity.mxREAL);
-		data = cast(double[])allocate(length*double.sizeof);
-		mxSetM(matlabData, length);
-		mxSetN(matlabData, 1);
-		mxSetPr(matlabData, data.ptr);
+		static if(!is(T: string))
+		{
+			matlabData = mxCreateDoubleMatrix(0, 0, mxComplexity.mxREAL);
+			data = cast(T[])allocate(length*T.sizeof);
+			mxSetM(matlabData, length);
+			mxSetN(matlabData, 1);
+			mxSetPr(matlabData, data.ptr);
+		}
 	}
 
-	@nogc this(double initdata, ulong length)
+	@nogc this(T initdata, ulong length)
 	{
-		matlabData = mxCreateDoubleMatrix(0, 0, mxComplexity.mxREAL);
-		data = cast(double[])allocate(length*double.sizeof);
-		mxSetM(matlabData, length);
-		mxSetN(matlabData, 1);
-		mxSetPr(matlabData, data.ptr);
-
-		data[] = initdata;
+		static if(!is(T: string))
+		{
+			matlabData = mxCreateDoubleMatrix(0, 0, mxComplexity.mxREAL);
+			data = cast(T[])allocate(length*T.sizeof);
+			mxSetM(matlabData, length);
+			mxSetN(matlabData, 1);
+			mxSetPr(matlabData, data.ptr);
+			data[] = initdata;
+		}
 	}
 
-	@nogc this(double[] initdata)
+	@nogc this(string initdata)
 	{
-		matlabData = mxCreateDoubleMatrix(0, 0, mxComplexity.mxREAL);
-		data = cast(double[])allocate(initdata.length*double.sizeof);
-		mxSetM(matlabData, data.length);
-		mxSetN(matlabData, 1);
-		mxSetPr(matlabData, data.ptr);
-		
-		data[] = initdata[];
+		static if(is(T: string))
+		{
+			matlabData = mxCreateString(null);
+			data = cast(T)allocate(initdata.length);
+			mxSetM(matlabData, initdata.length);
+			mxSetN(matlabData, 1);
+			mxSetData(matlabData, cast(void*)data.ptr);
+			data = initdata[]; // not sure if this does what I want
+		}
+	}
+
+	@nogc this(T[] initdata)
+	{
+		static if(!is(T: string))
+		{
+			matlabData = mxCreateDoubleMatrix(0, 0, mxComplexity.mxREAL);
+			data = cast(T[])allocate(initdata.length*T.sizeof);
+			mxSetM(matlabData, initdata.length);
+			mxSetN(matlabData, 1);
+			mxSetPr(matlabData, data.ptr);
+			data[] = initdata[];
+		}
 	}
 
 	@nogc ~this()
 	{
-		mxSetData(matlabData, null);
-		mxDestroyArray(matlabData);
-		mxFree(data.ptr);
+		static if(!is(T: string))
+		{
+			mxSetData(matlabData, null);
+			mxDestroyArray(matlabData);
+			mxFree(data.ptr);
+		}
 	}
 }

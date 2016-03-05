@@ -2,6 +2,8 @@ module matlab.mex;
 
 import matlab.matrix;
 
+@nogc:
+
 extern (C):
 
 alias impl_info_tag* MEX_impl_info;

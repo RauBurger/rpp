@@ -1,5 +1,6 @@
 module matlab.matrix;
 
+@nogc:
 extern (C):
 
 alias mxArray_tag mxArray;

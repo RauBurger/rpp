@@ -1,93 +1,61 @@
 module matlab.mlArray;
 
+import std.experimental.allocator.mallocator;
 import std.stdio;
 
 import matlab.mex;
 import matlab.matrix;
 
+// Based of phobos Mallocator implementation
+@nogc void[] allocate(size_t bytes)
+{
+	if(!bytes) return null;
+	auto p = mxMalloc(bytes);
+	return p ? p[0..bytes] : null;
+}
+
 struct mlArray
 {
-	private double* data;
+	double[] data;
 	mxArray* matlabData;
-	ulong length;
 
-	alias matlabData this;
+	alias data this;
 
-	this(ulong length)
+	@nogc this(ulong length)
 	{
-		matlabData = mxCreateDoubleMatrix(1, length, mxComplexity.mxREAL);
-		
-		data = mxGetPr(matlabData);
+		matlabData = mxCreateDoubleMatrix(0, 0, mxComplexity.mxREAL);
+		data = cast(double[])allocate(length*double.sizeof);
+		mxSetM(matlabData, length);
+		mxSetN(matlabData, 1);
+		mxSetPr(matlabData, data.ptr);
 	}
 
-	this(double initdata, ulong length)
+	@nogc this(double initdata, ulong length)
 	{
-		this.length = length;
-		matlabData = mxCreateDoubleMatrix(1, length, mxComplexity.mxREAL);
-		
-		data = mxGetPr(matlabData);
-		data[0..length] = initdata;
+		matlabData = mxCreateDoubleMatrix(0, 0, mxComplexity.mxREAL);
+		data = cast(double[])allocate(length*double.sizeof);
+		mxSetM(matlabData, length);
+		mxSetN(matlabData, 1);
+		mxSetPr(matlabData, data.ptr);
+
+		data[] = initdata;
 	}
 
-	this(double[] initdata)
-	{		
-		length = initdata.length;
-		matlabData = mxCreateDoubleMatrix(1, initdata.length, mxComplexity.mxREAL);
+	@nogc this(double[] initdata)
+	{
+		matlabData = mxCreateDoubleMatrix(0, 0, mxComplexity.mxREAL);
+		data = cast(double[])allocate(initdata.length*double.sizeof);
+		mxSetM(matlabData, data.length);
+		mxSetN(matlabData, 1);
+		mxSetPr(matlabData, data.ptr);
 		
-		data = mxGetPr(matlabData);
-		data[0..length] = initdata[];
+		data[] = initdata[];
 	}
 
-	~this()
+	@nogc ~this()
 	{
+		mxSetData(matlabData, null);
 		mxDestroyArray(matlabData);
-	}
-
-	ref double opIndex(ulong idx)
-	{
-		writeln("in opIndex 1");
-		return data[idx];
-	}
-
-	double[] opIndex(ulong idx1, ulong idx2)
-	{
-		writeln("in opIndex 2");
-		return data[idx1..idx2];
-	}
-
-	double[] opIndex(ulong[2] idx1)
-	{
-		writeln("in opIndex 2");
-		return data[idx1[0]..idx1[1]];
-	}
-
-	double[] opSlice(ulong start, ulong end)
-	{
-		writeln("In opSlice");
-		return data[start..end];
-	}
-
-	int opApply(int delegate(int idx, ref double) dg)
-	{
-		int result = 0;
-		for(int i = 0; i < length; i++)
-		{
-			result = dg(i, data[i]);
-			if(result)
-				break;
-		}
-		return result;
-	}
-
-	int opApply(int delegate(ref double) dg)
-	{
-		int result = 0;
-		for(int i = 0; i < length; i++)
-		{
-			result = dg(data[i]);
-			if(result)
-				break;
-		}
-		return result;
+		mxFree(data.ptr);
 	}
 }

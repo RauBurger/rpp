@@ -1,7 +1,9 @@
 module matlab.matlabBacked;
 
-import std.stdio;
 import std.conv;
+import std.experimental.allocator.mallocator;
+import std.stdio;
+import std.string;
 
 import rpp.server.backend;
 import rpp.common.enums;
@@ -32,73 +34,75 @@ class MatlabBackend : IServerBackend
 	Engine* engine;
 
 	this()
-	{
-		writeln("Hello matlab");
-		
+	{	
 		engine = engOpen("");
 
 		if(engine == null)
 		{
-			writeln("Engine failed to open");
-			return;
-			//return -1;
+			throw new Exception("Failed to open matlab engine");
 		}
-		/+
-		mlArray arr = mlArray(linspace(0, 10, 100));
-
-		writeln("Copied array, off to matlab");
-		engPutVariable(engine, "T", arr);
-
-		writeln("making thing");
-		engEvalString(engine, "D = T.^2;");
-		writeln("plotting");
-		engEvalString(engine, "hlines = plot(T, D);");
-		engEvalString(engine, `setupPlot(hlines, '$T$', '$Y$', {'line'}, 12, 'northwest');`);
-
-		writeln("Press return");
-		readln();
-
-		foreach(int i, ref el; arr)
-			el = to!double(i);
-
-		engPutVariable(engine, "T", arr);
-
-		engEvalString(engine, "figure;");
-		engEvalString(engine, `hlines = plot(D, T, 'r', D, -T, 'g');`);
-		engEvalString(engine, `setupPlot(hlines, '$D$', '$T$', {'line1', 'line2'}, 12, 'northwest');`);
-
-		writeln("Press return to exit");
-		readln();
-
-		engClose(engine);
-		writeln("Goodbye");
-		+/
 	}
 
 	~this()
 	{
-		writeln("closing down");
 		engClose(engine);
-		writeln("Goodbye");
 	}
 	
 	void Plot(double[][] X, double[][] Y)
 	{
-		writeln("Plot1");
+		string command = `hlines = plot(`;
+
+		foreach(ulong i; 0..X.length)
+		{
+			mlArray x = mlArray(X[i]);
+			mlArray y = mlArray(Y[i]);
+
+			string xStr = "X"~i.to!string;
+			string yStr = "Y"~i.to!string;
+
+			engPutVariable(engine, xStr.toStringz, x.matlabData);
+			engPutVariable(engine, yStr.toStringz, y.matlabData);
+
+			command ~= xStr~", "~yStr~", ";
+		}
+
+		command = command.chomp(", ") ~ ");";
+
+		engEvalString(engine, command.toStringz);
 	}
 	
 	void Plot(double[][] X, double[][] Y, string[] fmts)
 	{
-		writeln("Plot2");
+		string command = `hlines = plot(`;
+
+		foreach(ulong i; 0..X.length)
+		{
+			mlArray x = mlArray(X[i]);
+			mlArray y = mlArray(Y[i]);
+
+			string xStr = "X"~i.to!string;
+			string yStr = "Y"~i.to!string;
+
+			engPutVariable(engine, xStr.toStringz, x.matlabData);
+			engPutVariable(engine, yStr.toStringz, y.matlabData);
+
+			command ~= xStr~", "~yStr~`, '`~fmts[i]~`', `;
+		}
+
+		command = command.chomp(", ") ~ ");";
+
+		engEvalString(engine, command.toStringz);
 	}
 	
 	void Figure()
 	{
-		writeln("Figure1");
+		engEvalString(engine, "figure;");
+		//writeln("Figure1");
 	}
 
 	void Figure(Options options)
 	{
+
 		writeln("Figure2");
 	}
 

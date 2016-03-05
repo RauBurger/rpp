@@ -2,6 +2,8 @@ module matlab.engine;
 
 import matlab.matrix;
 
+@nogc:
+
 extern (C):
 
 alias engine Engine;

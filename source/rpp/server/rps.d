@@ -53,7 +53,7 @@ void server(ushort port)
 		writeln("Waiting for connection");
 		while((0 == server.select(readSet, null, null)) && running)
 		{
-			receiveTimeout(dur!"msecs"(10), (bool run){ running = run;});
+			//receiveTimeout(dur!"msecs"(10), (bool run){ running = run;});
 		}
 
 		if(!running)
@@ -222,9 +222,13 @@ int main()
 	Tid thread = spawn({ server(54000); });
 
 	writeln("Press enter to exit...heh");
-	readln();
-
-	send(thread, false);
-	writeln("Stopping server");
-	return 0;
+	//readln();
+	while(true)
+	{
+		string str = readln();
+		writeln(str);
+	}
+	//send(thread, false);
+	//writeln("Stopping server");
+	//return 0;
 }

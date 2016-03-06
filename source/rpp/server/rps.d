@@ -29,7 +29,7 @@ void server(ushort port)
 	Backend.LoadBackend("plugins/libmatlabBackend.so");
 	//auto server = new TcpSocket(AddressFamily.INET);
 	auto server = new Socket(AddressFamily.INET, SocketType.STREAM);
-	//server.blocking = false;
+	server.blocking = false;
 	//server.bind(new InternetAddress("0.0.0.0", port));
 	server.bind(new InternetAddress("0.0.0.0", port));
 

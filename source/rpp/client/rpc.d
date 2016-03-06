@@ -53,20 +53,16 @@ void initRPP(string remoteAddr, ushort port)
 {
 	writeln("trying to connect to server");
 	
-	//server = new TcpSocket(AddressFamily.INET);
-	server = new Socket(AddressFamily.INET, SocketType.STREAM);
+	server = new TcpSocket(AddressFamily.INET);
 	server.blocking = true;
-	//server.setOption(SocketOptionLevel.TCP, SocketOption.TCP_NODELAY, 1);
+	server.setOption(SocketOptionLevel.TCP, SocketOption.TCP_NODELAY, 1);
 	
-	//serverAddr = new InternetAddress(to!(const(char[]))(remoteAddr), port);
-	//serverAddr = new InternetAddress("localhost", port);
-	server.connect(new InternetAddress("localhost", port));
+	serverAddr = new InternetAddress(to!(const(char[]))(remoteAddr), port);
+	server.connect(serverAddr);
 	writeln("connected to server... I think");
 
-	//server.send([0]);
 	ubyte[5] respData;
 	long rcvBytes = server.receiveFrom(respData, serverAddr);
-	writeln("got bytes");
 
 	if(respData[0] == 3)
 		ThrowPlotException(respData);
@@ -84,7 +80,10 @@ private static ~this()
 	if(respData[0] == 3)
 		ThrowPlotException(respData);
 
-	writeln(respData);
+	rcvBytes = server.receiveFrom(respData, serverAddr);
+	if(respData[0] == 3)
+		ThrowPlotException(respData);
+
 	server.close();
 }
 

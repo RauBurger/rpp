@@ -2,6 +2,7 @@ module rpp.server.rps;
 
 import std.concurrency;
 import std.conv;
+import std.range;
 import std.socket;
 import std.stdio;
 import std.traits;
@@ -30,7 +31,7 @@ void server(ushort port)
 	auto server = new Socket(AddressFamily.INET, SocketType.STREAM);
 	//server.blocking = false;
 	//server.bind(new InternetAddress("0.0.0.0", port));
-	server.bind(new InternetAddress("localhost", port));
+	server.bind(new InternetAddress("0.0.0.0", port));
 
 	bool running = true;
 	bool connected = false;
@@ -53,7 +54,8 @@ void server(ushort port)
 		writeln("Waiting for connection");
 		while((0 == server.select(readSet, null, null)) && running)
 		{
-			//receiveTimeout(dur!"msecs"(10), (bool run){ running = run;});
+			"hey".writeln;
+			receiveTimeout(dur!"msecs"(10), (bool run){ running = run;});
 		}
 
 		if(!running)
@@ -68,15 +70,14 @@ void server(ushort port)
 		connected = true;
 
 		// Acknowledge client connection
-		client.send([ServerResponce.Ok, 0xFF, 0xFF, 0xFF, 0xFF]);
+		ubyte[5] respData = [ServerResponce.Ok, 0xFF, 0xFF, 0xFF, 0xFF];
+		client.send(respData);
 
 		Command currentCommand = Command.None;
 		Function currentFunction = Function.None;
 
 		while(connected && running)
 		{
-			//receiveTimeout(dur!"msecs"(-1), (bool run){ running = run;});
-
 			data.length = currentPayload;
 			ptrdiff_t resp = client.receive(data);
 			if(resp == 0)
@@ -85,7 +86,13 @@ void server(ushort port)
 				connected = false;
 			}
 
-			client.send(cast(ubyte[])[0]~toUBytes(to!uint(resp)));
+			while(resp != currentPayload)
+			{
+				resp += client.receive(data[resp..$]);
+			}
+
+			respData = chain(cast(ubyte[])[0], cast(ubyte[])toUBytes(to!uint(cast(ulong)resp))).array;
+			client.send(respData);
 			currentCommand = to!Command(data[0]);
 
 			switch(currentCommand)
@@ -200,9 +207,12 @@ void server(ushort port)
 
 				case Command.Close:
 					writeln("closing connection");
-					client.send([0, 4, 255, 89, 255]);
+					respData = [0, 4, 255, 89, 255];
+					client.send(respData);
+					client.shutdown(SocketShutdown.BOTH);
 					client.close();
 					connected = false;
+					currentPayload = 10;
 					break;
 
 				default:
@@ -217,22 +227,23 @@ void server(ushort port)
 
 int main()
 {
-	//writeln("Spawning server");
+	writeln("Spawning server");
 	
-	//Tid thread = spawn({ server(54000); });
+	Tid thread = spawn({ server(54000); });
 
-	server(54000);
-/+
+	//server(54000);
 	writeln("Press enter to exit...heh");
-	//readln();
+	readln();
+	/+
 	while(true)
 	{
 		string str = readln();
 		writeln(str);
 	}
-	//send(thread, false);
-	//writeln("Stopping server");
 	+/
+	send(thread, false);
+	//writeln("Stopping server");
+	
 	return 0;
 	
 }

@@ -701,26 +701,58 @@ private void contourImpl(Function func, T, options...)(T[][] X, T[][] Y, T[][] Z
 
 void colorbar()
 {
+	ubyte[] colorbarData;
 
+	colorbarData ~= Command.Data;
+	colorbarData ~= 0x0;
+
+	SendFunctionCommand!(Function.Colorbar)(colorbarData.length);
+	SendData(colorbarData);
+	SendDoneCommand();
 }
 
 void colorbar(string placement)
 {
+	ubyte[] colorbarData;
 
+	colorbarData ~= Command.Data;
+	colorbarData ~= 0x1;
+	colorbarData ~= toUBytes!ubyte(placement);
+
+	SendFunctionCommand!(Function.Colorbar)(colorbarData.length);
+	SendData(colorbarData);
+	SendDoneCommand();	
 }
 
 void colorbar(Nvp...)(Nvp nvp)
 	if ((Nvp.length == 2) && is(Nvp[0]: string) &&
 		(isIntegral!(AliasSeq!(Nvp)[1]) || isFloatingPoint!(AliasSeq!(Nvp)[1]) || is(Nvp[1]: string)))
 {
+	ubyte[] colorbarData;
 
+	colorbarData ~= Command.Data;
+	colorbarData ~= 0x2;
+	colorbarData ~= optionsToUbytes(nvp);
+
+	SendFunctionCommand!(Function.Colorbar)(colorbarData.length);
+	SendData(colorbarData);
+	SendDoneCommand();
 }
 
 void colorbar(Nvp...)(string placement, Nvp nvp)
 	if ((Nvp.length == 2) && is(Nvp[0]: string) &&
 		(isIntegral!(AliasSeq!(Nvp)[1]) || isFloatingPoint!(AliasSeq!(Nvp)[1]) || is(Nvp[1]: string)))
 {
+	ubyte[] colorbarData;
 
+	colorbarData ~= Command.Data;
+	colorbarData ~= 0x3;
+	colorbarData ~= toUBytes!ubyte(placement);
+	colorbarData ~= optionsToUbytes(nvp);
+	
+	SendFunctionCommand!(Function.Colorbar)(colorbarData.length);
+	SendData(colorbarData);
+	SendDoneCommand();
 }
 
 private void SendData(ubyte[] data)

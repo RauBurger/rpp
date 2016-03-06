@@ -21,7 +21,7 @@ ubyte[] toUBytes(sizeT, T)(T[] data)
 	if(isIntegral!T || isFloatingPoint!T)
 {
 	ubyte[] bytes;
-	bytes ~= toUBytes!sizeT(data.length*T.sizeof);
+	bytes ~= toUBytes!sizeT(data.length*(ForeachType!T).sizeof);
 	foreach(el; data)
 		bytes ~= toUBytes!T(el);
 
@@ -87,7 +87,7 @@ T get(T, sizeT)(ubyte[] data, ref uint offset)
 	}
 	else static if(!isArray!(ForeachType!T))
 	{
-		sizeT dim = get!sizeT(data, offset);
+		sizeT dim = get!sizeT(data, offset)/(ForeachType!T).sizeof;
 
 		T arr = new T(dim);
 
@@ -99,8 +99,8 @@ T get(T, sizeT)(ubyte[] data, ref uint offset)
 	}
 	else static if(isArray!(ForeachType!T) && !isArray!(ForeachType!(ForeachType!T)))
 	{
-		sizeT dim1 = get!sizeT(data, offset);
-		sizeT dim2 = get!sizeT(data, offset);
+		sizeT dim1 = get!sizeT(data, offset)/(ForeachType!(ForeachType!T)).sizeof;
+		sizeT dim2 = get!sizeT(data, offset)/(ForeachType!(ForeachType!T)).sizeof;
 
 		T arr = new T(dim1, dim2);
 

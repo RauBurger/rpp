@@ -93,3 +93,58 @@ struct mlArray(T)
 		}
 	}
 }
+
+struct mlArray2D
+{
+	double[] data;
+
+	mxArray* matlabData;
+
+	alias data this;
+
+	@nogc this(ulong dim1, ulong dim2)
+	{
+		matlabData = mxCreateDoubleMatrix(0, 0, mxComplexity.mxREAL);
+		data = cast(double[])allocate(dim1*dim2*double.sizeof);
+		mxSetM(matlabData, dim1);
+		mxSetN(matlabData, dim2);
+		mxSetPr(matlabData, data.ptr);
+	}
+
+	@nogc this(double initdata, ulong dim1, ulong dim2)
+	{
+		matlabData = mxCreateDoubleMatrix(0, 0, mxComplexity.mxREAL);
+		data = cast(double[])allocate(dim1*dim2*double.sizeof);
+		
+		mxSetM(matlabData, dim1);
+		mxSetN(matlabData, dim2);
+		mxSetPr(matlabData, data.ptr);
+		
+		data[] = initdata;
+	}
+
+	@nogc this(double[][] initdata)
+	{
+		matlabData = mxCreateDoubleMatrix(0, 0, mxComplexity.mxREAL);
+		
+		data = cast(double[])allocate(initdata.length*initdata[0].length*double.sizeof);
+
+		mxSetM(matlabData, initdata.length);
+		mxSetN(matlabData, initdata[0].length);
+		mxSetPr(matlabData, data.ptr);
+
+		ulong offset = 0;
+		for(int i = 0; i < initdata.length; i++)
+		{
+			data[offset..offset+initdata.length] = initdata[i][];
+			offset += initdata[i].length;
+		}
+	}
+
+	@nogc ~this()
+	{
+		mxSetData(matlabData, null);
+		mxDestroyArray(matlabData);
+		mxFree(data.ptr);
+	}
+}

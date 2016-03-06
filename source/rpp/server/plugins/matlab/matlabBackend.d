@@ -17,18 +17,6 @@ extern (C) IServerBackend InitBackend()
 	return new MatlabBackend();
 }
 
-double[] linspace(double start, double end, int points)
-{
-	double h = (end-start)/(points-1);
-	double[] x = new double[points];
-	x[0] = start;
-	for(int i = 1; i < points; i++)
-	{
-		x[i] = x[i-1]+h;
-	}
-	return x;
-}
-
 class MatlabBackend : IServerBackend
 {
 	Engine* engine;
@@ -136,7 +124,6 @@ class MatlabBackend : IServerBackend
 		}
 
 		command = command.chomp(`,'`) ~ `},`~fontSize.to!string~`,'`~legendLoc~`');`;
-		command.writeln;
 
 		engEvalString(engine, command.toStringz);
 	}
@@ -266,7 +253,8 @@ class MatlabBackend : IServerBackend
 	
 	void Axis(long[] limits)
 	{
-		writeln("Axis");
+		string command = `axis([`~limits[0].to!string~`,`~limits[1].to!string~`,`~limits[2].to!string~`,`~limits[3].to!string~`]);`;
+		engEvalString(engine, command.toStringz);
 	}
 	
 	void Axis(string option)
@@ -289,202 +277,261 @@ class MatlabBackend : IServerBackend
 	
 	void Contour(double[][] Z)
 	{
-		writeln("Contour");
+		contourImpl!(Function.Contour, 0)(null, null, Z, 0, null, null);
 	}
 	
 	void Contour(double[][] Z, Options options)
 	{
-		writeln("Contour");
+		contourImpl!(Function.Contour, 0)(null, null, Z, 0, null, options);
 	}
 	
 	void Contour(double[][] Z, uint n)
 	{
-		writeln("Contour");
+		contourImpl!(Function.Contour, 1)(null, null, Z, n, null, null);
 	}
 	
 	void Contour(double[][] Z, uint n, Options options)
 	{
-		writeln("Contour");
+		contourImpl!(Function.Contour, 1)(null, null, Z, n, null, options);
 	}
 	
 	void Contour(double[][] Z, uint[] v)
 	{
-		writeln("Contour");
+		contourImpl!(Function.Contour, 2)(null, null, Z, 0, v, null);
 	}
 	
 	void Contour(double[][] Z, uint[] v, Options options)
 	{
-		writeln("Contour");
+		contourImpl!(Function.Contour, 2)(null, null, Z, 0, v, options);
 	}
 	
 	void Contour(double[][] X, double[][] Y, double[][] Z)
 	{
-		writeln("Contour");
+		contourImpl!(Function.Contour, 3)(X, Y, Z, 0, null, null);
 	}
 	
 	void Contour(double[][] X, double[][] Y, double[][] Z, Options options)
 	{
-		writeln("Contour");
+		contourImpl!(Function.Contour, 3)(X, Y, Z, 0, null, options);
 	}
 	
 	void Contour(double[][] X, double[][] Y, double[][] Z, uint n)
 	{
-		writeln("Contour");
+		contourImpl!(Function.Contour, 4)(X, Y, Z, n, null, null);
 	}
 	
 	void Contour(double[][] X, double[][] Y, double[][] Z, uint n, Options options)
 	{
-		writeln("Contour");
+		contourImpl!(Function.Contour, 4)(X, Y, Z, n, null, options);
 	}
 	
 	void Contour(double[][] X, double[][] Y, double[][] Z, uint[] v)
 	{
-		writeln("Contour");
+		contourImpl!(Function.Contour, 5)(X, Y, Z, 0, v, null);
 	}
 	
 	void Contour(double[][] X, double[][] Y, double[][] Z, uint[] v, Options options)
 	{
-		writeln("Contour");
+		contourImpl!(Function.Contour, 5)(X, Y, Z, 0, v, options);
 	}
 	
 	void Contourf(double[][] Z)
 	{
-		writeln("Contourf");
+		contourImpl!(Function.Contourf, 0)(null, null, Z, 0, null, null);
 	}
 	
 	void Contourf(double[][] Z, Options options)
 	{
-		writeln("Contourf");
+		contourImpl!(Function.Contourf, 0)(null, null, Z, 0, null, options);
 	}
 	
 	void Contourf(double[][] Z, uint n)
 	{
-		writeln("Contourf");
+		contourImpl!(Function.Contourf, 1)(null, null, Z, n, null, null);
 	}
 	
 	void Contourf(double[][] Z, uint n, Options options)
 	{
-		writeln("Contourf");
+		contourImpl!(Function.Contourf, 1)(null, null, Z, n, null, options);
 	}
 	
 	void Contourf(double[][] Z, uint[] v)
 	{
-		writeln("Contourf");
+		contourImpl!(Function.Contourf, 2)(null, null, Z, 0, v, null);
 	}
 	
 	void Contourf(double[][] Z, uint[] v, Options options)
 	{
-		writeln("Contourf");
+		contourImpl!(Function.Contourf, 2)(null, null, Z, 0, v, options);
 	}
 	
 	void Contourf(double[][] X, double[][] Y, double[][] Z)
 	{
-		writeln("Contourf");
+		contourImpl!(Function.Contourf, 3)(X, Y, Z, 0, null, null);
 	}
 	
 	void Contourf(double[][] X, double[][] Y, double[][] Z, Options options)
 	{
-		writeln("Contourf");
+		contourImpl!(Function.Contourf, 3)(X, Y, Z, 0, null, options);
 	}
-	
+
 	void Contourf(double[][] X, double[][] Y, double[][] Z, uint n)
 	{
-		writeln("Contourf");
+		contourImpl!(Function.Contourf, 4)(X, Y, Z, n, null, null);
 	}
 	
 	void Contourf(double[][] X, double[][] Y, double[][] Z, uint n, Options options)
 	{
-		writeln("Contourf");
+		contourImpl!(Function.Contourf, 4)(X, Y, Z, n, null, options);
 	}
 	
 	void Contourf(double[][] X, double[][] Y, double[][] Z, uint[] v)
 	{
-		writeln("Contourf");
+		contourImpl!(Function.Contourf, 5)(X, Y, Z, 0, v, null);
 	}
-	
+
 	void Contourf(double[][] X, double[][] Y, double[][] Z, uint[] v, Options options)
 	{
-		writeln("Contourf");
+		contourImpl!(Function.Contourf, 5)(X, Y, Z, 0, v, options);
 	}
-	
+
 	void Contour3(double[][] Z)
 	{
-		writeln("Contour3");
+		contourImpl!(Function.Contour3, 0)(null, null, Z, 0, null, null);
 	}
 	
 	void Contour3(double[][] Z, Options options)
 	{
-		writeln("Contour3");
+		contourImpl!(Function.Contour3, 0)(null, null, Z, 0, null, options);
 	}
 	
 	void Contour3(double[][] Z, uint n)
 	{
-		writeln("Contour3");
+		contourImpl!(Function.Contour3, 1)(null, null, Z, n, null, null);
 	}
 	
 	void Contour3(double[][] Z, uint n, Options options)
 	{
-		writeln("Contour3");
+		contourImpl!(Function.Contour3, 1)(null, null, Z, n, null, options);
 	}
 	
 	void Contour3(double[][] Z, uint[] v)
 	{
-		writeln("Contour3");
+		contourImpl!(Function.Contour3, 2)(null, null, Z, 0, v, null);
 	}
 	
 	void Contour3(double[][] Z, uint[] v, Options options)
 	{
-		writeln("Contour3");
+		contourImpl!(Function.Contour3, 2)(null, null, Z, 0, v, options);
 	}
 	
 	void Contour3(double[][] X, double[][] Y, double[][] Z)
 	{
-		writeln("Contour3");
+		contourImpl!(Function.Contour3, 3)(X, Y, Z, 0, null, null);
 	}
 	
 	void Contour3(double[][] X, double[][] Y, double[][] Z, Options options)
 	{
-		writeln("Contour3");
+		contourImpl!(Function.Contour3, 3)(X, Y, Z, 0, null, options);
 	}
 	
 	void Contour3(double[][] X, double[][] Y, double[][] Z, uint n)
 	{
-		writeln("Contour3");
+		contourImpl!(Function.Contour3, 4)(X, Y, Z, n, null, null);
 	}
 	
 	void Contour3(double[][] X, double[][] Y, double[][] Z, uint n, Options options)
 	{
-		writeln("Contour3");
+		contourImpl!(Function.Contour3, 4)(X, Y, Z, n, null, options);
 	}
 	
 	void Contour3(double[][] X, double[][] Y, double[][] Z, uint[] v)
 	{
-		writeln("Contour3");
+		contourImpl!(Function.Contour3, 5)(X, Y, Z, 0, v, null);
 	}
 	
 	void Contour3(double[][] X, double[][] Y, double[][] Z, uint[] v, Options options)
 	{
-		writeln("Contour3");
+		contourImpl!(Function.Contour3, 5)(X, Y, Z, 0, v, options);
 	}
 	
+	private void contourImpl(Function func, int type)(double[][]X, double[][]Y, double[][]Z, uint n, uint[] v, Options options)
+	{
+		assert(Z !is null);
+		auto z = mlArray2D(Z);
+		engPutVariable(engine, "Z", z.matlabData);
+		string command = `hlines = `~func.to!string.toLower~`(`;
+
+		static if(type == 0)
+		{
+			command ~= `Z,`;
+		}
+		else static if(type == 1)
+		{
+			command ~= `Z,`~n.to!string~`,`;
+		}
+		else static if(type == 2)
+		{
+			assert(v !is null);
+			auto V = mlArray!double(to!(double[])(v));
+			engPutVariable(engine, "v", V.matlabData);
+
+			command ~= `Z, v,`;
+		}
+		else static if((type == 3) || (type == 4) || (type == 5))
+		{
+			assert(X !is null);
+			assert(Y !is null);
+			auto x = mlArray2D(X);
+			auto y = mlArray2D(Y);
+			engPutVariable(engine, "X", x.matlabData);
+			engPutVariable(engine, "Y", y.matlabData);
+
+			command ~= `X, Y, Z,`;
+
+			static if(type == 4)
+			{
+				command ~= n.to!string~`,`;
+			}
+			else static if(type == 5)
+			{
+				assert(v !is null);
+				auto V = mlArray!double(to!(double[])(v));
+				engPutVariable(engine, "v", V.matlabData);
+				command ~= `v,`;
+			}
+		}
+
+		command ~= optionsToCommandString(options);
+		command = command.chomp(`,`) ~ `);`;
+		engEvalString(engine, command.toStringz);
+	}
+
 	void Colorbar()
 	{
-		writeln("Colorbar");
+		engEvalString(engine, `colorbar;`);
 	}
 	
 	void Colorbar(string placement)
 	{
-		writeln("Colorbar");
+		string command = `colorbar('` ~ placement ~ `');`;
+		engEvalString(engine, command.toStringz);
 	}
 	
 	void Colorbar(Options options)
 	{
-		writeln("Colorbar");
+		string command = `colorbar(`;
+		command ~= optionsToCommandString(options);
+		command = command.chomp(",") ~ `);`;
+		engEvalString(engine, command.toStringz);
 	}
 	
 	void Colorbar(string placement, Options options)
 	{
-		writeln("Colorbar");
+		string command = `colorbar('` ~ placement ~ `',`;
+		command ~= optionsToCommandString(options);
+		command = command.chomp(",") ~ `);`;
+		engEvalString(engine, command.toStringz);
 	}
 	
 	void Semilogx(double[][] X, double[][] Y)

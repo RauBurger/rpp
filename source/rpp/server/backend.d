@@ -416,7 +416,7 @@ struct Backend
 		}
 	}
 
-	static void ContourImpl0(Function func)(ubyte[] data, uint offset)
+	private static void ContourImpl0(Function func)(ubyte[] data, uint offset)
 	{
 		double[][] Z = get!(double[][], uint)(data, offset);
 
@@ -432,7 +432,7 @@ struct Backend
 		}
 	}
 
-	static void ContourImpl1(Function func)(ubyte[] data, uint offset)
+	private static void ContourImpl1(Function func)(ubyte[] data, uint offset)
 	{
 		double[][] Z = get!(double[][], uint)(data, offset);
 		uint n = get!uint(data, offset);
@@ -449,7 +449,7 @@ struct Backend
 		}
 	}
 
-	static void ContourImpl2(Function func)(ubyte[] data, uint offset)
+	private static void ContourImpl2(Function func)(ubyte[] data, uint offset)
 	{
 		double[][] Z = get!(double[][], uint)(data, offset);
 		uint[] v = get!(uint[], uint)(data, offset);
@@ -466,7 +466,7 @@ struct Backend
 		}
 	}
 
-	static void ContourImpl3(Function func)(ubyte[] data, uint offset)
+	private static void ContourImpl3(Function func)(ubyte[] data, uint offset)
 	{
 		double[][] X = get!(double[][], uint)(data, offset);
 		double[][] Y = get!(double[][], uint)(data, offset);
@@ -484,7 +484,7 @@ struct Backend
 		}
 	}
 
-	static void ContourImpl4(Function func)(ubyte[] data, uint offset)
+	private static void ContourImpl4(Function func)(ubyte[] data, uint offset)
 	{
 		double[][] X = get!(double[][], uint)(data, offset);
 		double[][] Y = get!(double[][], uint)(data, offset);
@@ -504,7 +504,7 @@ struct Backend
 		}
 	}
 
-	static void ContourImpl5(Function func)(ubyte[] data, uint offset)
+	private static void ContourImpl5(Function func)(ubyte[] data, uint offset)
 	{
 		double[][] X = get!(double[][], uint)(data, offset);
 		double[][] Y = get!(double[][], uint)(data, offset);
@@ -526,6 +526,49 @@ struct Backend
 
 	static void Colorbar(ubyte[] data)
 	{
+		uint offset = 1;
+		ubyte type = data[offset];
+		offset++;
 
+		switch(type)
+		{
+			case 0x0:
+				colorbarImpl0(data, offset);
+				break;
+			case 0x1:
+				colorbarImpl1(data, offset);
+				break;
+			case 0x2:
+				colorbarImpl2(data, offset);
+				break;
+			case 0x3:
+				colorbarImpl3(data, offset);
+				break;
+			default:
+				break;
+		}
+	}
+
+	private static void colorbarImpl0(ubyte[] data, ref uint offset)
+	{
+		backend.Colorbar;
+	}
+
+	private static void colorbarImpl1(ubyte[] data, ref uint offset)
+	{
+		backend.Colorbar(get!(string, ubyte)(data, offset));
+	}
+
+	private static void colorbarImpl2(ubyte[] data, ref uint offset)
+	{
+		backend.Colorbar(bytesToOptions(data, offset));
+	}
+
+	private static void colorbarImpl3(ubyte[] data, ref uint offset)
+	{
+		string placement = get!(string, ubyte)(data, offset);
+		Options options = bytesToOptions(data, offset);
+		backend.Colorbar(placement, options);
 	}
 }
+

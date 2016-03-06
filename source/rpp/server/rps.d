@@ -217,10 +217,12 @@ void server(ushort port)
 
 int main()
 {
-	writeln("Spawning server");
+	//writeln("Spawning server");
 	
-	Tid thread = spawn({ server(54000); });
+	//Tid thread = spawn({ server(54000); });
 
+	server(54000);
+/+
 	writeln("Press enter to exit...heh");
 	//readln();
 	while(true)
@@ -230,5 +232,7 @@ int main()
 	}
 	//send(thread, false);
 	//writeln("Stopping server");
-	//return 0;
+	+/
+	return 0;
+	
 }

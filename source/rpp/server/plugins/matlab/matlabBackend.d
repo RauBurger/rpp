@@ -36,7 +36,6 @@ class MatlabBackend : IServerBackend
 	this()
 	{	
 		engine = engOpen("matlab -nosplash");
-		//engine = engOpen("");
 
 		if(engine == null)
 		{
@@ -51,32 +50,39 @@ class MatlabBackend : IServerBackend
 	
 	void Plot(double[][] X, double[][] Y)
 	{
-		"plot1".writeln;
-		string command = `hlines = plot(`;
-
-		foreach(ulong i; 0..X.length)
-		{
-			auto x = mlArray!double(X[i]);
-			auto y = mlArray!double(Y[i]);
-
-			string xStr = "X"~i.to!string;
-			string yStr = "Y"~i.to!string;
-
-			engPutVariable(engine, xStr.toStringz, x.matlabData);
-			engPutVariable(engine, yStr.toStringz, y.matlabData);
-
-			command ~= xStr~", "~yStr~", ";
-		}
-
-		command = command.chomp(", ") ~ ");";
-
-		engEvalString(engine, command.toStringz);
+		plotImpl!(Function.Plot)(X, Y, null);
 	}
 	
 	void Plot(double[][] X, double[][] Y, string[] fmts)
 	{
-		"plot2".writeln;
-		string command = `hlines = plot(`;
+		plotImpl!(Function.Plot)(X, Y, fmts);
+	}
+	
+	private string optionsToCommandString(Options options)
+	{
+		string opts = "";
+		if(options !is null)
+		{
+			foreach(option; options.keys)
+			{
+				opts ~= `'` ~ option ~ `',`;
+				if(options[option].type == typeid(immutable(char)[]))
+				{
+					opts ~= `'` ~ options[option].get!string ~ `',`;
+				}
+				else
+				{
+					opts ~= options[option].to!string ~ `,`;
+				}
+			}
+		}
+
+		return opts;
+	}
+
+	private void plotImpl(Function func)(double[][] X, double[][] Y, string[] fmts)
+	{
+		string command = `hlines = `~func.to!string.toLower~`(`;
 
 		foreach(ulong i; 0..X.length)
 		{
@@ -89,24 +95,35 @@ class MatlabBackend : IServerBackend
 			engPutVariable(engine, xStr.toStringz, x.matlabData);
 			engPutVariable(engine, yStr.toStringz, y.matlabData);
 
-			command ~= xStr~", "~yStr~`, '`~fmts[i]~`', `;
+			if(fmts is null)
+			{
+				command ~= xStr~", "~yStr~", ";
+			}
+			else
+			{
+				command ~= xStr~", "~yStr~`, '`~fmts[i]~`', `;
+			}
 		}
 
 		command = command.chomp(", ") ~ ");";
 
-		writeln("Plot2 eval");
 		engEvalString(engine, command.toStringz);
 	}
-	
+
 	void Figure()
 	{
-		"figure1".writeln;
 		engEvalString(engine, "figure;");
 	}
 
 	void Figure(Options options)
 	{
-		writeln("Figure2");
+		string command = `figure(`;
+
+		command ~= optionsToCommandString(options);
+
+		command = command.chomp(`,`) ~ `);`;
+
+		engEvalString(engine, command.toStringz);
 	}
 
 	void SetupPlot(string xlabel, string ylabel, string[] legendNames, ubyte fontSize, string legendLoc)
@@ -126,72 +143,125 @@ class MatlabBackend : IServerBackend
 
 	void Print(string format, string path)
 	{
-		writeln("Print");
+		string command = `print('`~path~`','`~format~`');`;
+		engEvalString(engine, command.toStringz);
 	}
 
 	void Xlabel(string label)
 	{
-		writeln("Xlabel1");
+		textLabelImpl!(Function.Xlabel)(label, null);
 	}
 
 	void Xlabel(string label, Options options)
 	{
-		writeln("Xlabel2");
+		textLabelImpl!(Function.Xlabel)(label, options);
 	}
 
 	void Ylabel(string label)
 	{
-		writeln("Ylabel");
+		textLabelImpl!(Function.Ylabel)(label, null);
 	}
 	
 	void Ylabel(string label, Options options)
 	{
-		writeln("Ylabel");
+		textLabelImpl!(Function.Ylabel)(label, options);
 	}
 	
 	void Title(string label)
 	{
-		writeln("Title");
+		textLabelImpl!(Function.Title)(label, null);
 	}
 	
 	void Title(string label, Options options)
 	{
-		writeln("Title");
+		textLabelImpl!(Function.Title)(label, options);
 	}
 	
+	private void textLabelImpl(Function func)(string label, Options options)
+	{
+		string command = func.to!string.toLower~`('`~label~`',`;
+
+		command ~= optionsToCommandString(options);
+
+		command = command.chomp(",") ~ `);`;
+
+		engEvalString(engine, command.toStringz);
+	}
+
 	void Subplot(ubyte m, ubyte n, ubyte p)
 	{
-		writeln("Subplot");
+		subplotImpl(m, n, p, null, null);
 	}
 	
 	void Subplot(ubyte m, ubyte n, ubyte p, string opt)
 	{
-		writeln("Subplot");
+		subplotImpl(m, n, p, opt, null);
 	}
 	
 	void Subplot(ubyte m, ubyte n, ubyte p, Options options)
 	{
-		writeln("Subplot");
+		subplotImpl(m, n, p, null, options);
 	}
 	
 	void Subplot(ubyte m, ubyte n, ubyte p, string opt, Options options)
 	{
-		writeln("Subplot");
+		subplotImpl(m, n, p, opt, options);
+	}
+
+	void subplotImpl(ubyte m, ubyte n, ubyte p, string opt, Options options)
+	{
+		string command = `subplot(` ~ m.to!string ~ `,` ~ n.to!string ~ `,` ~ p.to!string ~ `,`;
+
+		if(opt !is null)
+		{
+			command ~= `'` ~ opt ~ `',`;
+		}
+
+		command ~= optionsToCommandString(options);
+
+		command = command.chomp(`,`) ~ `);`;
+
+		engEvalString(engine, command.toStringz);
 	}
 	
 	void Legend(string[] lines)
 	{
-		writeln("Legend");
+		legendImpl(lines, null);
 	}
 	
 	void Legend(string[] lines, Options options)
 	{
-		writeln("Legend");
+		legendImpl(lines, options);
 	}
 	
+	private void legendImpl(string[] lines, Options options)
+	{
+		string command = `legend({`;
+
+		foreach(line; lines)
+		{
+			command ~= `'`~line~`',`;
+		}
+
+		command = command.chomp(`,`) ~ `},`;
+
+		command ~= optionsToCommandString(options);
+
+		command = command.chomp(`,`) ~ `);`;
+
+		engEvalString(engine, command.toStringz);
+	}
+
 	void Hold(bool on)
 	{
-		writeln("Hold");
+		if(on)
+		{
+			engEvalString(engine, `hold on;`);
+		}
+		else
+		{
+			engEvalString(engine, `hold off;`);
+		}
 	}
 	
 	void Axis(long[] limits)
@@ -201,12 +271,20 @@ class MatlabBackend : IServerBackend
 	
 	void Axis(string option)
 	{
-		writeln("Axis");
+		string command = `axis('` ~ option ~ `');`;
+		engEvalString(engine, command.toStringz);
 	}
 	
 	void Grid(bool on)
 	{
-		writeln("Grid");
+		if(on)
+		{
+			engEvalString(engine, `grid on;`);
+		}
+		else
+		{
+			engEvalString(engine, `grid off;`);
+		}
 	}
 	
 	void Contour(double[][] Z)
@@ -411,32 +489,32 @@ class MatlabBackend : IServerBackend
 	
 	void Semilogx(double[][] X, double[][] Y)
 	{
-		writeln("Semilogx");
+		plotImpl!(Function.Semilogx)(X, Y, null);
 	}
 	
 	void Semilogx(double[][] X, double[][] Y, string[] fmts)
 	{
-		writeln("Semilogx");
+		plotImpl!(Function.Semilogx)(X, Y, fmts);
 	}
 	
 	void Semilogy(double[][] X, double[][] Y)
 	{
-		writeln("Semilogy");
+		plotImpl!(Function.Semilogy)(X, Y, null);
 	}
 	
 	void Semilogy(double[][] X, double[][] Y, string[] fmts)
 	{
-		writeln("Semilogy");
+		plotImpl!(Function.Semilogy)(X, Y, fmts);
 	}
 	
 	void Loglog(double[][] X, double[][] Y)
 	{
-		writeln("Loglog");
+		plotImpl!(Function.Loglog)(X, Y, null);
 	}
 	
 	void Loglog(double[][] X, double[][] Y, string[] fmts)
 	{
-		writeln("Loglog");
+		plotImpl!(Function.Loglog)(X, Y, fmts);
 	}
 	
 }

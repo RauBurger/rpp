@@ -141,7 +141,7 @@ void server(ushort port)
 							}
 							else if(data[1] == 1)
 							{
-								Backend.Hold(false);
+								Backend.Hold(true);
 							}
 							break;
 
@@ -156,7 +156,7 @@ void server(ushort port)
 							}
 							else if(data[1] == 1)
 							{
-								Backend.Grid(false);
+								Backend.Grid(true);
 							}
 							break;
 

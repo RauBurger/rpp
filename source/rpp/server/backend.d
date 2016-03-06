@@ -188,11 +188,13 @@ struct Backend
 
 		Options options;
 		
-		foreach(i; 0..numOptions-1)
+		for(int i = 0; i < numOptions; i++)
 		{
 			string option = get!(string, ushort)(data, offset);
 
-			string type = to!string(data[offset..offset+3]);
+
+			string type = to!string(cast(char[])data[offset..offset+3]);
+			
 			offset += 3;
 
 			if(type == "i32")

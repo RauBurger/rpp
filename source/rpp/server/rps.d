@@ -2,9 +2,12 @@ module rpp.server.rps;
 
 import std.concurrency;
 import std.conv;
+import std.file;
+import std.json;
 import std.range;
 import std.socket;
 import std.stdio;
+import std.string;
 import std.traits;
 
 import core.time;
@@ -12,25 +15,17 @@ import core.time;
 import rpp.common.utilities;
 import rpp.common.enums;
 import rpp.server.backend;
-/+
-Socket server;
 
-static ~this()
-{
-	if(server is null)
-	{
-		server.close();
-	}
-}
-+/
 void server(ushort port)
 {
-	writeln("Initializing plotting backend");
-	Backend.LoadBackend("plugins/libmatlabBackend.so");
-	//auto server = new TcpSocket(AddressFamily.INET);
+	string plugin;
+	receive((string plug){ plugin = plug; });
+
+	writeln("Initializing plotting backend: "~plugin);
+	Backend.LoadBackend("plugins/"~plugin~".plg");
+
 	auto server = new Socket(AddressFamily.INET, SocketType.STREAM);
-	server.blocking = false;
-	//server.bind(new InternetAddress("0.0.0.0", port));
+
 	server.bind(new InternetAddress("0.0.0.0", port));
 
 	bool running = true;
@@ -43,6 +38,9 @@ void server(ushort port)
 
 	SocketSet readSet = new SocketSet;
 
+	TimeVal timeout;
+	timeout.seconds = 0;
+	timeout.microseconds = 0;
 	while(running)
 	{
 		Socket client;
@@ -52,10 +50,12 @@ void server(ushort port)
 
 		int selectResp = 0;
 		writeln("Waiting for connection");
-		while((0 == server.select(readSet, null, null)) && running)
+		int retVal = server.select(readSet, null, null); 
+		while((0 == retVal) && running)
 		{
-			"hey".writeln;
+			//"hey".writeln;
 			receiveTimeout(dur!"msecs"(10), (bool run){ running = run;});
+			retVal = server.select(readSet, null, null);
 		}
 
 		if(!running)
@@ -227,23 +227,20 @@ void server(ushort port)
 
 int main()
 {
+	string serverConfig = cast(immutable(char)[])read("server.json");
+	JSONValue config = parseJSON(serverConfig);
 	writeln("Spawning server");
 	
-	Tid thread = spawn({ server(54000); });
+	immutable string plugin = config["plugin"].to!string;
 
-	//server(54000);
+	Tid thread = spawn(&server, cast(ushort)54000);
+	send(thread, plugin.removechars(`"`));
+
 	writeln("Press enter to exit...heh");
 	readln();
-	/+
-	while(true)
-	{
-		string str = readln();
-		writeln(str);
-	}
-	+/
-	send(thread, false);
-	//writeln("Stopping server");
 	
+	send(thread, false);
+
 	return 0;
 	
 }

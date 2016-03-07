@@ -1,8 +1,8 @@
 {
-	"name": "matlabBackend",
+	"name": "matlab",
 	"targetType": "dynamicLibrary",
 	"targetPath": "../../../../../plugins",
-	"targetName": "matlabBackend",
+	"targetName": "matlab",
 	"buildTypes": {
 		"debug": {
 			"buildOptions": ["debugMode", "debugInfo"],
@@ -20,5 +20,6 @@
 			   "-lm",
 			   "-lstdc++",
 			   "-leng"
-	]
+	],
+	"postBuildCommands": ["$ROOT_PACKAGE_DIR/../build/pluginPostBuild.d $PACKAGE_DIR $PACKAGE_DIR../../../../../plugins"]
 }

@@ -71,20 +71,23 @@ void initRPP(string remoteAddr, ushort port)
 
 private static ~this()
 {
-	writeln("closing socket");
+	if(server !is null)
+	{
+		writeln("closing socket");
 
-	server.send([Command.Close, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
-	
-	ubyte[5] respData;
-	long rcvBytes = server.receiveFrom(respData, serverAddr);
-	if(respData[0] == 3)
-		ThrowPlotException(respData);
+		server.send([Command.Close, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+		
+		ubyte[5] respData;
+		long rcvBytes = server.receiveFrom(respData, serverAddr);
+		if(respData[0] == 3)
+			ThrowPlotException(respData);
 
-	rcvBytes = server.receiveFrom(respData, serverAddr);
-	if(respData[0] == 3)
-		ThrowPlotException(respData);
+		rcvBytes = server.receiveFrom(respData, serverAddr);
+		if(respData[0] == 3)
+			ThrowPlotException(respData);
 
-	server.close();
+		server.close();
+	}
 }
 
 private void SendFunctionCommand(Function func)(ulong dataLength)
@@ -105,7 +108,7 @@ private void SendFunctionCommand(Function func)(ulong dataLength)
 
 private int argMod(T, ulong len)()
 {
-	static if(is(T == real[]) || len == 2)
+	static if(is(T == double[]) || len == 2)
 		return 2;
 	else static if(is(T == string))
 		return 3;
@@ -181,7 +184,7 @@ private void plotImpl(Function func, Line...)(Line args)
 	ubyte[] plotData;
 	plotData ~= Command.Data;
 
-	static if(is(typeof(lines[$-1]) == real[]) || lines.length == 2)
+	static if((isFloatingPoint!(ForeachType!(typeof(lines[$-1]))) && isArray!(typeof(lines[$-1]))) || lines.length == 2)
 	{
 		static assert(lines.length%2 == 0, "Invalid number of arguments");
 		plotData ~= PlotFormat.NoFormatStr;
@@ -450,7 +453,7 @@ void legend(options...)(string[] lines, options args)
 	SendDoneCommand();
 }
 
-void axis(T)(T arg) if(is(T : string) || (isArray!T && isIntegral!(typeof(arg[0]))))
+void axis(T)(T arg) if(is(T : string) || (isArray!T && (isIntegral!(typeof(arg[0])) || isFloatingPoint!(typeof(arg[0])))))
 {
 	alias options = AliasSeq!arg;
 	ubyte[] axesData;
@@ -469,10 +472,10 @@ void axis(T)(T arg) if(is(T : string) || (isArray!T && isIntegral!(typeof(arg[0]
 		
 		axesData ~= 1;
 
-		axesData ~= toUBytes!long(arg[0]);
-		axesData ~= toUBytes!long(arg[1]);
-		axesData ~= toUBytes!long(arg[2]);
-		axesData ~= toUBytes!long(arg[3]);
+		axesData ~= toUBytes!double(arg[0]);
+		axesData ~= toUBytes!double(arg[1]);
+		axesData ~= toUBytes!double(arg[2]);
+		axesData ~= toUBytes!double(arg[3]);
 	}
 
 	SendFunctionCommand!(Function.Axis)(axesData.length);

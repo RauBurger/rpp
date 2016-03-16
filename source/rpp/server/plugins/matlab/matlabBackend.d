@@ -251,7 +251,7 @@ class MatlabBackend : IServerBackend
 		}
 	}
 	
-	void Axis(long[] limits)
+	void Axis(double[] limits)
 	{
 		string command = `axis([`~limits[0].to!string~`,`~limits[1].to!string~`,`~limits[2].to!string~`,`~limits[3].to!string~`]);`;
 		engEvalString(engine, command.toStringz);

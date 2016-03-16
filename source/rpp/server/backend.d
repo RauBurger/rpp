@@ -39,7 +39,7 @@ interface IServerBackend
 	void Legend(string[] lines);
 	void Legend(string[] lines, Options options);
 	void Hold(bool on);
-	void Axis(long[] limits);
+	void Axis(double[] limits);
 	void Axis(string option);
 	void Grid(bool on);
 	void Contour(double[][] Z);
@@ -362,12 +362,12 @@ struct Backend
 		else if(funcType == 1)
 		{
 			// array argument
-			long[] limits = new long[4];
+			double[] limits = new double[4];
 
-			limits[0] = get!long(data, offset);
-			limits[1] = get!long(data, offset);
-			limits[2] = get!long(data, offset);
-			limits[3] = get!long(data, offset);
+			limits[0] = get!double(data, offset);
+			limits[1] = get!double(data, offset);
+			limits[2] = get!double(data, offset);
+			limits[3] = get!double(data, offset);
 
 			backend.Axis(limits);
 		}

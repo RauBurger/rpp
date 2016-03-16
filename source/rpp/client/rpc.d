@@ -208,7 +208,8 @@ private void plotImpl(Function func, Line...)(Line args)
 		{
 			static if(i % mod() == 0)
 			{
-				static assert(is(typeof(sym) == real[]) || is(typeof(sym) == double[]) || is(typeof(sym) == float[]));
+				//static assert(is(typeof(sym) == real[]) || is(typeof(sym) == double[]) || is(typeof(sym) == float[]));
+				static assert((isFloatingPoint!(ForeachType!(typeof(sym))) && isArray!(typeof(sym))));
 
 				uint length = cast(uint)sym.length*8; // array length in bytes
 
@@ -219,8 +220,8 @@ private void plotImpl(Function func, Line...)(Line args)
 			}
 			else static if(i % mod() == 1)
 			{
-				static assert(is(typeof(sym) == real[]) || is(typeof(sym) == double[]) || is(typeof(sym) == float[]));
-
+				//static assert(is(typeof(sym) == real[]) || is(typeof(sym) == double[]) || is(typeof(sym) == float[]));
+				static assert((isFloatingPoint!(ForeachType!(typeof(sym))) && isArray!(typeof(sym))));
 				foreach(el; sym)
 					plotData ~= toUBytes!double(el);
 			}

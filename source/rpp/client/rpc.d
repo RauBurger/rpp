@@ -49,24 +49,44 @@ class PlotException : Exception
 private Socket server;
 private Address serverAddr;
 
-void initRPP(string remoteAddr, ushort port)
+bool initRPP(string remoteAddr, ushort port)
 {
-	writeln("trying to connect to server");
-	
-	server = new TcpSocket(AddressFamily.INET);
-	server.blocking = true;
-	server.setOption(SocketOptionLevel.TCP, SocketOption.TCP_NODELAY, 1);
-	
-	serverAddr = new InternetAddress(to!(const(char[]))(remoteAddr), port);
-	server.connect(serverAddr);
-	writeln("connected to server... I think");
+	try
+	{
+		writeln("trying to connect to server");
+		
+		server = new TcpSocket(AddressFamily.INET);
+		server.blocking = true;
+		server.setOption(SocketOptionLevel.TCP, SocketOption.TCP_NODELAY, 1);
+		
+		serverAddr = new InternetAddress(to!(const(char[]))(remoteAddr), port);
+		server.connect(serverAddr);
+		writeln("connected to server... I think");
 
-	ubyte[5] respData;
-	long rcvBytes = server.receiveFrom(respData, serverAddr);
+		ubyte[5] respData;
+		long rcvBytes = server.receiveFrom(respData, serverAddr);
 
-	if(respData[0] == 3)
-		ThrowPlotException(respData);
-
+		if(respData[0] == 3)
+		{
+			ThrowPlotException(respData);
+		}
+			
+		return true;
+	}
+	catch(SocketException se)
+	{
+		writeln("Caught socket exception. Message: ", se.toString());
+		server = null;
+		return false;
+	}
+	catch(PlotException pe)
+	{
+		throw pe;
+	}
+	catch(Exception e)
+	{
+		throw e;
+	}
 }
 
 private static ~this()
@@ -92,23 +112,26 @@ private static ~this()
 
 private void SendFunctionCommand(Function func)(ulong dataLength)
 {
-	ubyte[10] funcCommand;
-	funcCommand[0] = Command.Function;
-	funcCommand[1] = func;
+	if(server !is null)
+	{
+		ubyte[10] funcCommand;
+		funcCommand[0] = Command.Function;
+		funcCommand[1] = func;
 
-	funcCommand[2..$] = toUBytes!long(dataLength);
+		funcCommand[2..$] = toUBytes!long(dataLength);
 
-	long sentBytes = server.sendTo(funcCommand, serverAddr);
+		long sentBytes = server.sendTo(funcCommand, serverAddr);
 
-	ubyte[5] respData;
-	long rcvBytes = server.receiveFrom(respData, serverAddr);
-	if(respData[0] == 3)
-		ThrowPlotException(respData);
+		ubyte[5] respData;
+		long rcvBytes = server.receiveFrom(respData, serverAddr);
+		if(respData[0] == 3)
+			ThrowPlotException(respData);
+	}
 }
 
 private int argMod(T, ulong len)()
 {
-	static if(is(T == double[]) || len == 2)
+	static if((isFloatingPoint!(ForeachType!T) && isArray!T) || len == 2)
 		return 2;
 	else static if(is(T == string))
 		return 3;
@@ -199,6 +222,7 @@ private void plotImpl(Function func, Line...)(Line args)
 	else
 		static assert(false, "Invalid parameters");
 
+	uint length = 0;
 	alias mod = argMod!(typeof(lines[$-1]), lines.length);
 	foreach(int i, sym; lines)
 	{
@@ -208,10 +232,9 @@ private void plotImpl(Function func, Line...)(Line args)
 		{
 			static if(i % mod() == 0)
 			{
-				//static assert(is(typeof(sym) == real[]) || is(typeof(sym) == double[]) || is(typeof(sym) == float[]));
 				static assert((isFloatingPoint!(ForeachType!(typeof(sym))) && isArray!(typeof(sym))));
 
-				uint length = cast(uint)sym.length*8; // array length in bytes
+				length = cast(uint)sym.length*8; // array length in bytes
 
 				plotData ~= toUBytes!uint(length);
 
@@ -220,8 +243,9 @@ private void plotImpl(Function func, Line...)(Line args)
 			}
 			else static if(i % mod() == 1)
 			{
-				//static assert(is(typeof(sym) == real[]) || is(typeof(sym) == double[]) || is(typeof(sym) == float[]));
 				static assert((isFloatingPoint!(ForeachType!(typeof(sym))) && isArray!(typeof(sym))));
+				assert(cast(uint)sym.length*8 == length, "x, y array lengths don't match");
+				
 				foreach(el; sym)
 					plotData ~= toUBytes!double(el);
 			}
@@ -760,20 +784,26 @@ void colorbar(Nvp...)(string placement, Nvp nvp)
 
 private void SendData(ubyte[] data)
 {
-	ptrdiff_t sentBytes = server.sendTo(data, serverAddr);
+	if(server !is null)
+	{
+		ptrdiff_t sentBytes = server.sendTo(data, serverAddr);
 
-	ubyte[5] respData;
-	ptrdiff_t rcvBytes = server.receiveFrom(respData, serverAddr);
-	uint bytesReceived = get!uint(respData[1..$]);
+		ubyte[5] respData;
+		ptrdiff_t rcvBytes = server.receiveFrom(respData, serverAddr);
+		uint bytesReceived = get!uint(respData[1..$]);
+	}
 }
 
 private void SendDoneCommand()
 {
-	ptrdiff_t sentBytes = server.sendTo([Command.Done], serverAddr);
-	ubyte [5] respData;
-	ptrdiff_t rcvBytes = server.receiveFrom(respData, serverAddr);
-	if(respData[0] == 3)
-		ThrowPlotException(respData);
+	if(server !is null)
+	{
+		ptrdiff_t sentBytes = server.sendTo([Command.Done], serverAddr);
+		ubyte [5] respData;
+		ptrdiff_t rcvBytes = server.receiveFrom(respData, serverAddr);
+		if(respData[0] == 3)
+			ThrowPlotException(respData);
+	}
 }
 
 private void ThrowPlotException(ubyte[5] requestData)

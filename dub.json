@@ -38,7 +38,7 @@
 			"mainSourceFile": "source/rpp/server/rps.d",
 			"buildTypes": {
 				"debug": {
-					"buildOptions": ["debugMode", "debugInfo"],
+					"buildOptions": ["debugMode", "debugInfo"]
 				}
 			},
 			"dflags": ["-defaultlib=libphobos2.so"],

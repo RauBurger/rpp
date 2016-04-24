@@ -508,6 +508,34 @@ void axis(T)(T arg) if(is(T : string) || (isArray!T && (isIntegral!(typeof(arg[0
 	SendDoneCommand();
 }
 
+void caxis(T)(T arg) if(is(T : string) || (isArray!T && (isIntegral!(typeof(arg[0])) || isFloatingPoint!(typeof(arg[0])))))
+{
+	alias options = AliasSeq!arg;
+	ubyte[] axesData;
+
+	axesData ~= Command.Data;
+
+	static if(is(T : string))
+	{
+		axesData ~= 0;
+
+		axesData ~= toUBytes!ubyte(arg);
+	}
+	else
+	{
+		assert(arg.length == 2, "Array must be 4 elements long for axes command");
+		
+		axesData ~= 1;
+
+		axesData ~= toUBytes!double(arg[0]);
+		axesData ~= toUBytes!double(arg[1]);
+	}
+
+	SendFunctionCommand!(Function.Caxis)(axesData.length);
+	SendData(axesData);
+	SendDoneCommand();
+}
+
 void hold(string onOff)()
 {
 	static assert((onOff == "on") || (onOff == "off"), "hold on or off, what are you doing");

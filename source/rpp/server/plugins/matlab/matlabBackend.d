@@ -263,6 +263,18 @@ class MatlabBackend : IServerBackend
 		engEvalString(engine, command.toStringz);
 	}
 	
+	void Caxis(double[] limits)
+	{
+		string command = `caxis([`~limits[0].to!string~`,`~limits[1].to!string~`]);`;
+		engEvalString(engine, command.toStringz);
+	}
+	
+	void Caxis(string option)
+	{
+		string command = `caxis('` ~ option ~ `');`;
+		engEvalString(engine, command.toStringz);
+	}
+	
 	void Grid(bool on)
 	{
 		if(on)

@@ -136,9 +136,19 @@ struct mlArray2D
 		ulong offset = 0;
 		for(int i = 0; i < initdata.length; i++)
 		{
+			for(int j = 0; j < initdata[i].length; j++)
+			{
+				data[j*initdata.length + i] = initdata[i][j];
+			}
+		}
+		/+
+		for(int i = 0; i < initdata.length; i++)
+		{
+			//data[offset..offset+initdata.length] = initdata[i][];
 			data[offset..offset+initdata.length] = initdata[i][];
 			offset += initdata[i].length;
 		}
+		+/
 	}
 
 	@nogc ~this()

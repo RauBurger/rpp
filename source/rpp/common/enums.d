@@ -32,7 +32,8 @@ enum Function : byte
 	Colorbar,	// 15
 	Semilogx,	// 16	done
 	Semilogy,	// 17	done
-	Loglog		// 18	done
+	Loglog,		// 18	done
+	Caxis
 }
 
 enum ServerResponce : ubyte

@@ -16,10 +16,10 @@ import rpp.common.utilities;
 import rpp.common.enums;
 import rpp.server.backend;
 
-void server(ushort port)
+void server(ushort port, string plugin)
 {
-	string plugin;
-	receive((string plug){ plugin = plug; });
+	//string plugin;
+	//receive((string plug){ plugin = plug; });
 
 	writeln("Initializing plotting backend: "~plugin);
 	Backend.LoadBackend("plugins/"~plugin~".plg");
@@ -155,7 +155,11 @@ void server(ushort port)
 						case Function.Axis:
 							Backend.Axis(data);
 							break;
-
+							
+						case Function.Caxis:
+							Backend.Caxis(data);
+							break;
+							
 						case Function.Grid:
 							if(data[1] == 0)
 							{
@@ -233,13 +237,14 @@ int main()
 	
 	immutable string plugin = config["plugin"].to!string;
 
-	Tid thread = spawn(&server, cast(ushort)54000);
-	send(thread, plugin.removechars(`"`));
+	//Tid thread = spawn(&server, cast(ushort)54000);
+	server(cast(ushort)54000, plugin.removechars(`"`));
+	//send(thread, plugin.removechars(`"`));
 
 	writeln("Press enter to exit...heh");
 	readln();
 	
-	send(thread, false);
+	//send(thread, false);
 
 	return 0;
 	

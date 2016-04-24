@@ -41,6 +41,8 @@ interface IServerBackend
 	void Hold(bool on);
 	void Axis(double[] limits);
 	void Axis(string option);
+	void Caxis(double[] limits);
+	void Caxis(string option);
 	void Grid(bool on);
 	void Contour(double[][] Z);
 	void Contour(double[][] Z, Options options);
@@ -370,6 +372,31 @@ struct Backend
 			limits[3] = get!double(data, offset);
 
 			backend.Axis(limits);
+		}
+	}
+	
+	static void Caxis(ubyte[] data)
+	{
+		uint offset = 1;
+
+		ubyte funcType = data[offset];
+		offset++;
+
+		if(funcType == 0)
+		{
+			// string argument
+			string option = get!(string, ubyte)(data, offset);
+			backend.Caxis(option);
+		}
+		else if(funcType == 1)
+		{
+			// array argument
+			double[] limits = new double[2];
+
+			limits[0] = get!double(data, offset);
+			limits[1] = get!double(data, offset);
+
+			backend.Caxis(limits);
 		}
 	}
 

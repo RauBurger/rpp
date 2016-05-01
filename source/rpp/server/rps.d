@@ -84,6 +84,7 @@ void server(ushort port, string plugin)
 			{
 				writeln("client closed, connection lost");
 				connected = false;
+				break;
 			}
 
 			while(resp != currentPayload)
